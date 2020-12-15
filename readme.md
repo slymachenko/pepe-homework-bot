@@ -6,7 +6,7 @@ Created with [node-telegram-bot-api](https://github.com/yagop/node-telegram-bot-
 [![Node version](https://img.shields.io/badge/Node-v12.9.0-green)](https://nodejs.org/en/)
 [![Node-telegram-bot-api](https://img.shields.io/badge/Node_Telegram_Bot_Api-v0.50.0-blue)](https://github.com/yagop/node-telegram-bot-api)
 [![Mongoose](https://img.shields.io/badge/Mongoose-v5.11.8-red)](https://mongoosejs.com/)
-[![Dot-env](https://img.shields.io/badge/DotEnv-v8.2.0-yellow)](https://mongoosejs.com/)
+[![Dot-env](https://img.shields.io/badge/DotEnv-v8.2.0-yellow)](https://github.com/motdotla/dotenv)
 
 # Usage
 
