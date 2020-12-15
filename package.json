@@ -1,0 +1,20 @@
+{
+  "name": "pepe-homework-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot for easy access to homework for week",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "start-dev": "nodemon index.js"
+  },
+  "author": "Arseniy Bryndin",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "mongoose": "^5.11.8",
+    "node-telegram-bot-api": "^0.50.0"
+  },
+  "engines": {
+    "node": "12.9.0"
+  }
+}
