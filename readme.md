@@ -1,7 +1,7 @@
 # **pepe-homework-bot :frog:**
 
-Telegram bot for easy access to homework for week
-Created with [node-telegram-bot-api](https://github.com/yagop/node-telegram-bot-api)
+Telegram bot for easy access to homework for week  
+**Created with** [node-telegram-bot-api](https://github.com/yagop/node-telegram-bot-api)
 
 [![Node version](https://img.shields.io/badge/Node-v12.9.0-green)](https://nodejs.org/en/)
 [![Node-telegram-bot-api](https://img.shields.io/badge/Node_Telegram_Bot_Api-v0.50.0-blue)](https://github.com/yagop/node-telegram-bot-api)
@@ -28,7 +28,7 @@ Created with [node-telegram-bot-api](https://github.com/yagop/node-telegram-bot-
 4. Create config.env file in root directory with environment variables:  
    `TOKEN=...` @BotFather TOKEN  
    `CHAT_ID=...` Chat id for sending homework for next day at 18:00  
-   `MONGO_URL=...` URL of Mongo Data Base created on [MongoDB.com](https://www.mongodb.com/)
+   `MONGO_URL=...` URL of Mongo DataBase created on [MongoDB.com](https://www.mongodb.com/)
 
 # Technologies used
 
