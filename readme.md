@@ -15,8 +15,8 @@ Created with [node-telegram-bot-api](https://github.com/yagop/node-telegram-bot-
 
 # Example
 
-![1-example](.\readme-imgs\1-example.png)
-![2-example](.\readme-imgs\2-example.png)
+![1-example](https://raw.githubusercontent.com/SENYa-408/pepe-homework-bot/master/readme-imgs/1-example.png)
+![2-example](https://raw.githubusercontent.com/SENYa-408/pepe-homework-bot/master/readme-imgs/2-example.png)
 
 # Install
 
