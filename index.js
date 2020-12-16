@@ -20,7 +20,6 @@ mongoose.connect(process.env.MONGO_URL); // connecting to MongoDB
 // constant variables
 const TOKEN = process.env.TOKEN;
 const chatId = process.env.CHAT_ID; // variable needed to define the chat to which next day homework is sent
-const url = process.env.MONGO_URL;
 
 // Creating homework object with data taken from the database
 let homework = {};
@@ -42,7 +41,10 @@ FridaySubj.find((err, msg) => {
 });
 
 // let variables
-let type, html, day, subj;
+let html,
+  day,
+  subj,
+  usersType = { give: [], add: [] };
 
 // Create a bot variable - an instance of the TelegramBot class
 const bot = new TelegramBot(TOKEN, {
@@ -135,6 +137,22 @@ const giveHomework = (day) => {
 bot.onText(/\/start/, (msg) => {
   const { id } = msg.chat;
 
+  if (msg.chat.id !== msg.from.id) {
+    // Creating response message
+    html = `
+  <strong>Привет, ${msg.from.first_name}!</strong>
+  <i>Меня зовут лягушонок ПЕПЕ и я нужен для того чтобы помочь разобраться с этой глупой домашкой!
+  Сюда я буду кидать домашку на завтра, а если хочешь узнать или записать что-то - Добро пожаловать в Личные сообщения</i>
+  <pre>Выбери что тебе нужно: Чтобы я записал или написал домашку</pre>`;
+
+    // Sending response message
+    bot.sendMessage(id, html, {
+      parse_mode: "HTML",
+      disable_notification: true,
+    });
+    return;
+  }
+
   // Creating response message
   html = `
   <strong>Привет, ${msg.from.first_name}!</strong>
@@ -154,8 +172,12 @@ bot.onText(/\/start/, (msg) => {
 bot.onText(/Напиши/, (msg) => {
   const { id } = msg.chat;
 
-  // Set type variable to give
-  type = "give";
+  if (msg.chat.id !== msg.from.id) {
+    return;
+  }
+
+  // Set user id to give type
+  usersType.give.push(msg.from.id);
 
   // Creating response message
   html = `
@@ -179,8 +201,12 @@ bot.onText(/Напиши/, (msg) => {
 bot.onText(/Запиши/, (msg) => {
   const { id } = msg.chat;
 
-  // Set type variable to add
-  type = "add";
+  if (msg.chat.id !== msg.from.id) {
+    return;
+  }
+
+  // Set user id to add type
+  usersType.add.push(msg.from.id);
 
   // Creating response message
   html = `
@@ -204,6 +230,22 @@ bot.onText(/Запиши/, (msg) => {
 bot.onText(/Назад/, (msg) => {
   const { id } = msg.chat;
 
+  if (msg.chat.id !== msg.from.id) {
+    return;
+  }
+
+  // Reset user id
+  usersType.give.forEach((el, i) => {
+    if (el === msg.from.id) {
+      usersType.give.splice(i, 1);
+    }
+  });
+  usersType.add.forEach((el, i) => {
+    if (el === msg.from.id) {
+      usersType.add.splice(i, 1);
+    }
+  });
+
   // Creating response message
   html = `
         <strong>${msg.from.first_name},</strong>
@@ -225,7 +267,23 @@ bot.on("message", async (msg) => {
   try {
     const { id } = msg.chat;
 
-    let homeworkData;
+    let homeworkData, type;
+
+    if (msg.chat.id !== msg.from.id) {
+      return;
+    }
+
+    // Set type depending on which list the user is in
+    usersType.give.forEach((el) => {
+      if (el === msg.from.id) {
+        type = "give";
+      }
+    });
+    usersType.add.forEach((el) => {
+      if (el === msg.from.id) {
+        type = "add";
+      }
+    });
 
     if (type === "give") {
       switch (msg.text) {
@@ -346,6 +404,18 @@ bot.on("message", async (msg) => {
       }
 
       if (msg.text === "Готово") {
+        // Reset user id
+        usersType.give.forEach((el, i) => {
+          if (el === msg.from.id) {
+            usersType.give.splice(i, 1);
+          }
+        });
+        usersType.add.forEach((el, i) => {
+          if (el === msg.from.id) {
+            usersType.add.splice(i, 1);
+          }
+        });
+
         html = `<strong> Что мне сделать? </strong>`;
 
         // Sending response message
@@ -624,29 +694,30 @@ bot.on("message", async (msg) => {
 setInterval(() => {
   // Saving current Date to date variable
   const date = new Date();
+  let data;
 
   // Checking whether current date match needed date
   if (
-    date.getHours() === 18 &&
+    date.getHours() === 17 &&
     date.getMinutes() === 00 &&
     date.getDay() !== 6 &&
     date.getDay() !== 5
   ) {
     switch (date.getDay()) {
       case 0:
-        giveHomework(homework.Monday);
+        data = giveHomework(homework.Monday);
         break;
       case 1:
-        giveHomework(homework.Tuesday);
+        data = giveHomework(homework.Tuesday);
         break;
       case 2:
-        giveHomework(homework.Wednesday);
+        data = giveHomework(homework.Wednesday);
         break;
       case 3:
-        giveHomework(homework.Thursday);
+        data = giveHomework(homework.Thursday);
         break;
       case 4:
-        giveHomework(homework.Friday);
+        data = giveHomework(homework.Friday);
         break;
     }
     // Creating response message
