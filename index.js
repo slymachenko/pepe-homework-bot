@@ -13,73 +13,16 @@ const {
   ThursdaySubj,
   FridaySubj,
 } = require("./models/subjectModel");
-const { createCipher } = require("crypto");
 
-dotenv.config({ path: "./config.env" });
-mongoose.connect(process.env.MONGO_URL);
+dotenv.config({ path: "./config.env" }); // defining environment variables
+mongoose.connect(process.env.MONGO_URL); // connecting to MongoDB
 
 // constant variables
 const TOKEN = process.env.TOKEN;
 const chatId = process.env.CHAT_ID; // variable needed to define the chat to which next day homework is sent
 const url = process.env.MONGO_URL;
-// const homework = JSON.parse(fs.readFileSync("./dev-data/data/homework.json"));
 
-// const subjec = new TuesdaySubj({
-//   subject: "Доп. инфа",
-//   text: "",
-//   photo: "",
-// });
-
-// const subjec = new FridaySubj({
-//   subject: "Английский",
-//   groups: [
-//     {
-//       teacher: "Н.А.",
-//       text: "Н.А: ",
-//       photo: "",
-//     },
-//     {
-//       teacher: "А.П.",
-//       text: "А.П: ",
-//       photo: "",
-//     },
-//     {
-//       teacher: "А.Г.",
-//       text: "А.Г: ",
-//       photo: "",
-//     },
-//   ],
-// });
-
-// const subjec = new TuesdaySubj({
-//   subject: "Укр.мова",
-//   groups: [
-//     // {
-//     //   teacher: "Л.В.",
-//     //   text: "Л.В: ",
-//     //   photo: "",
-//     // },
-//     // {
-//     //   teacher: "С.Л.",
-//     //   text: "С.Л: ",
-//     //   photo: "",
-//     // },
-//     {
-//       teacher: "А.В.",
-//       text: "А.В: ",
-//       photo: "",
-//     },
-//     {
-//       teacher: "Л.А.",
-//       text: "Л.А: ",
-//       photo: "",
-//     },
-//   ],
-// });
-
-// subjec.save((err, msg) => {
-//   console.log("SAVED");
-// });
+// Creating homework object with data taken from the database
 let homework = {};
 
 MondaySubj.find((err, msg) => {
@@ -101,7 +44,7 @@ FridaySubj.find((err, msg) => {
 // let variables
 let type, html, day, subj;
 
-// Saving new TelegramBot to bot variable
+// Create a bot variable - an instance of the TelegramBot class
 const bot = new TelegramBot(TOKEN, {
   polling: {
     interval: 300,
@@ -117,19 +60,19 @@ console.log("Bot have been started...");
 // FUNCTIONS
 
 const giveHomework = (day) => {
-  // Clear previous data
-  let data = ``;
-  // Looping over each object to define the one that is divided into groups and ADD INFO object
+  let data = ``; // clear previous data
+
+  // Looping over each object to define the one that is divided into groups and additional info object
   day.forEach((el, index) => {
     switch (el.subject) {
-      case "Доп. информация":
-        // case it's add info
+      case "Доп. инфа":
+        // if current element is 'additional info' - add it to data without numbering in the list
         data += `<strong>${el.subject}:</strong> ${el.text}
     `;
 
         break;
       case "Английский":
-        // case it's English
+        // if current element is English - add it to data with groups as child elements
 
         if (day[index - 1].subject === el.subject) {
           groupdataEng = `
@@ -153,7 +96,7 @@ const giveHomework = (day) => {
         }
         break;
       case "Испанский":
-        //case it's Spanish
+        // if current element is Spanish - add it to data with groups as child elements
 
         groupdataEsp = `
         Л.В: ${el.groups[0].text}
@@ -163,7 +106,7 @@ const giveHomework = (day) => {
     `;
         break;
       case "Украинский":
-        // case it's Ukrainian
+        // if current element is Ukrainian - add it to data with groups as child elements
         if (day[index - 1].subject === el.subject) {
           groupdataUkr = `
         А.В: ${day[index - 1].groups[0].text}
@@ -175,17 +118,11 @@ const giveHomework = (day) => {
           data += `<strong>${index}.${el.subject},</strong>
     `;
         }
-        // groupdataUkr = `
-        // ${el.groups[0].text}
-        // ${el.groups[1].text}`;
-
-        // data += `<strong>${index}.${el.subject}:</strong> ${groupdataUkr}
-        // `;
         break;
       case "-":
         break;
       default:
-        // case it's common subject
+        // if current element isn't additional info or one with groups - add it to data
         data += `<strong>${index}.${el.subject}:</strong> ${el.text}
     `;
     }
@@ -202,7 +139,7 @@ bot.onText(/\/start/, (msg) => {
   html = `
   <strong>Привет, ${msg.from.first_name}!</strong>
   <i>Меня зовут лягушонок ПЕПЕ и я нужен для того чтобы помочь разобраться с этой глупой домашкой!</i>
-  <pre>Выбери что тебе нужно: Чтобы я записал или написал домашку?</pre>`;
+  <pre>Выбери что тебе нужно: Чтобы я записал или написал домашку</pre>`;
 
   // Sending response message
   bot.sendMessage(id, html, {
@@ -242,7 +179,7 @@ bot.onText(/Напиши/, (msg) => {
 bot.onText(/Запиши/, (msg) => {
   const { id } = msg.chat;
 
-  // Set type variable to give
+  // Set type variable to add
   type = "add";
 
   // Creating response message
@@ -365,7 +302,6 @@ bot.on("message", async (msg) => {
           parse_mode: "HTML",
           disable_notification: true,
           reply_markup: {
-            //   remove_keyboard: isback,
             keyboard: [
               [day[1].subject, day[2].subject, day[3].subject],
               [day[4].subject, day[5].subject, day[6].subject],
@@ -513,19 +449,18 @@ bot.on("message", async (msg) => {
               });
             }
 
+            // Updating data
             if (group === 0) {
               subj.groups[0].text = msg.text;
-              // Updating document
               cursubj.groups[0].text = msg.text;
             } else if (group === 1) {
               subj.groups[1].text = msg.text;
-              // Updating document
               cursubj.groups[1].text = msg.text;
             } else if (group === 2) {
               subj.groups[2].text = msg.text;
-              // Updating document
               cursubj.groups[2].text = msg.text;
             }
+
             // Saving data to DB
             await cursubj.save();
             break;
@@ -577,13 +512,12 @@ bot.on("message", async (msg) => {
               });
             }
 
+            // Updating data
             if (group === 0) {
               subj.groups[0].text = msg.text;
-              // Updating document
               cursubj.groups[0].text = msg.text;
             } else if (group === 1) {
               subj.groups[1].text = msg.text;
-              // Updating document
               cursubj.groups[1].text = msg.text;
             }
 
@@ -644,26 +578,17 @@ bot.on("message", async (msg) => {
               });
             }
 
+            // Updating data
             if (group === 0) {
-              // Updating subj
               subj.groups[0].text = msg.text;
-              // Updating document
               cursubj.groups[0].text = msg.text;
             } else if (group === 1) {
-              // Updating subj
               subj.groups[1].text = msg.text;
-              // Updating document
               cursubj.groups[1].text = msg.text;
             }
 
             // Saving data to DB
             await cursubj.save();
-
-          // subj.groups.forEach((el, index) => {
-          //   cursubj.groups[index].text = el.text;
-          //   subj.groups[0] = el.text;
-          //   await cursubj.save();
-          // });
         }
       } else if (msg.text === subj.subject) {
         // Creating response message
@@ -681,27 +606,13 @@ bot.on("message", async (msg) => {
           },
         });
       } else {
-        // Save data to subject
-        // if (msg.text !== undefined) subj.text = msg.text;
-
         if (msg.text !== undefined) {
-          // updating subj
+          // update data
           subj.text = msg.text;
-          // updating cursubj
           cursubj.text = msg.text;
           // saving cursubj to DB
           await cursubj.save();
-          // fs.writeFileSync(
-          //   "./dev-data/data/homework.json",
-          //   JSON.stringify(homework, null, 2)
-          // );
         }
-
-        // if (msg.photo !== undefined) {
-        //   subj.photo = msg.photo[0].file_id;
-        // } else if (msg.text !== undefined) {
-        //   subj.text = msg.text;
-        // }
       }
     }
   } catch (err) {
@@ -713,6 +624,7 @@ bot.on("message", async (msg) => {
 setInterval(() => {
   // Saving current Date to date variable
   const date = new Date();
+
   // Checking whether current date match needed date
   if (
     date.getHours() === 18 &&
@@ -737,7 +649,7 @@ setInterval(() => {
         giveHomework(homework.Friday);
         break;
     }
-    // Making response message
+    // Creating response message
     const html = `
             <strong>Домашка на завтра:</strong>
       <i>${data}</i>
