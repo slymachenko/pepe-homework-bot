@@ -13,6 +13,7 @@ const {
   ThursdaySubj,
   FridaySubj,
 } = require("./models/subjectModel");
+const { send } = require("process");
 
 dotenv.config({ path: "./config.env" }); // defining environment variables
 mongoose.connect(process.env.MONGO_URL); // connecting to MongoDB
@@ -146,6 +147,56 @@ const resetUserId = (userID) => {
   });
 };
 
+const sendMessage = (id, html, type, day) => {
+  switch (type) {
+    case "start":
+      bot.sendMessage(id, html, {
+        parse_mode: "HTML",
+        disable_notification: true,
+        reply_markup: {
+          keyboard: [["Запиши", "Напиши"]],
+        },
+      });
+      break;
+    case "days":
+      bot.sendMessage(id, html, {
+        parse_mode: "HTML",
+        disable_notification: true,
+        reply_markup: {
+          keyboard: [
+            ["Понедельник", "Вторник", "Среда"],
+            ["Четверг", "Пятница"],
+            ["Назад"],
+          ],
+        },
+      });
+      break;
+    case "teachers":
+      bot.sendMessage(id, html, {
+        parse_mode: "HTML",
+        disable_notification: true,
+        reply_markup: {
+          keyboard: [
+            [day[1].subject, day[2].subject, day[3].subject],
+            [day[4].subject, day[5].subject, day[6].subject],
+            [day[7].subject, day[8].subject],
+            [day[0].subject, "Назад"],
+          ],
+        },
+      });
+      break;
+    case "done":
+      bot.sendMessage(id, html, {
+        parse_mode: "HTML",
+        disable_notification: true,
+        reply_markup: {
+          keyboard: [["Готово", "Очистить"]],
+        },
+      });
+      break;
+  }
+};
+
 // COMMAND LISTENERS
 
 bot.onText(/\/start/, (msg) => {
@@ -174,13 +225,14 @@ bot.onText(/\/start/, (msg) => {
   <pre>Выбери что тебе нужно: Чтобы я записал или написал домашку</pre>`;
 
   // Sending response message
-  bot.sendMessage(id, html, {
-    parse_mode: "HTML",
-    disable_notification: true,
-    reply_markup: {
-      keyboard: [["Запиши", "Напиши"]],
-    },
-  });
+  // bot.sendMessage(id, html, {
+  //   parse_mode: "HTML",
+  //   disable_notification: true,
+  //   reply_markup: {
+  //     keyboard: [["Запиши", "Напиши"]],
+  //   },
+  // });
+  sendMessage(id, html, "start");
 });
 
 bot.onText(/Напиши/, (msg) => {
@@ -199,17 +251,18 @@ bot.onText(/Напиши/, (msg) => {
     <i>За какой день скинуть дз?</i>`;
 
   // Sending response message
-  bot.sendMessage(id, html, {
-    parse_mode: "HTML",
-    disable_notification: true,
-    reply_markup: {
-      keyboard: [
-        ["Понедельник", "Вторник", "Среда"],
-        ["Четверг", "Пятница"],
-        ["Назад"],
-      ],
-    },
-  });
+  // bot.sendMessage(id, html, {
+  //   parse_mode: "HTML",
+  //   disable_notification: true,
+  //   reply_markup: {
+  //     keyboard: [
+  //       ["Понедельник", "Вторник", "Среда"],
+  //       ["Четверг", "Пятница"],
+  //       ["Назад"],
+  //     ],
+  //   },
+  // });
+  sendMessage(id, html, "days");
 });
 
 bot.onText(/Запиши/, (msg) => {
@@ -228,17 +281,18 @@ bot.onText(/Запиши/, (msg) => {
       <i>На когда записать дз?</i>`;
 
   // Sending response message
-  bot.sendMessage(id, html, {
-    parse_mode: "HTML",
-    disable_notification: true,
-    reply_markup: {
-      keyboard: [
-        ["Понедельник", "Вторник", "Среда"],
-        ["Четверг", "Пятница"],
-        ["Назад"],
-      ],
-    },
-  });
+  // bot.sendMessage(id, html, {
+  //   parse_mode: "HTML",
+  //   disable_notification: true,
+  //   reply_markup: {
+  //     keyboard: [
+  //       ["Понедельник", "Вторник", "Среда"],
+  //       ["Четверг", "Пятница"],
+  //       ["Назад"],
+  //     ],
+  //   },
+  // });
+  sendMessage(id, html, "days");
 });
 
 bot.onText(/Назад/, (msg) => {
@@ -256,13 +310,14 @@ bot.onText(/Назад/, (msg) => {
         <i>Что мне сделать?</i>`;
 
   // Sending response message
-  bot.sendMessage(id, html, {
-    parse_mode: "HTML",
-    disable_notification: true,
-    reply_markup: {
-      keyboard: [["Запиши", "Напиши"]],
-    },
-  });
+  // bot.sendMessage(id, html, {
+  //   parse_mode: "HTML",
+  //   disable_notification: true,
+  //   reply_markup: {
+  //     keyboard: [["Запиши", "Напиши"]],
+  //   },
+  // });
+  sendMessage(id, html, "start");
 });
 
 // ALL MESSAGE LISTENER
@@ -316,17 +371,18 @@ bot.on("message", async (msg) => {
     <i>${homeworkData}</i>`;
 
       // Sending response message
-      bot.sendMessage(id, html, {
-        parse_mode: "HTML",
-        disable_notification: true,
-        reply_markup: {
-          keyboard: [
-            ["Понедельник", "Вторник", "Среда"],
-            ["Четверг", "Пятница"],
-            ["Назад"],
-          ],
-        },
-      });
+      // bot.sendMessage(id, html, {
+      //   parse_mode: "HTML",
+      //   disable_notification: true,
+      //   reply_markup: {
+      //     keyboard: [
+      //       ["Понедельник", "Вторник", "Среда"],
+      //       ["Четверг", "Пятница"],
+      //       ["Назад"],
+      //     ],
+      //   },
+      // });
+      sendMessage(id, html, "days");
     } else if (type === "add") {
       const { id } = msg.chat;
       let isDay, cursubj;
@@ -360,18 +416,19 @@ bot.on("message", async (msg) => {
     <strong>Какой предмет хочешь запиcать?</strong>`;
 
         // Sending response message
-        bot.sendMessage(id, html, {
-          parse_mode: "HTML",
-          disable_notification: true,
-          reply_markup: {
-            keyboard: [
-              [day[1].subject, day[2].subject, day[3].subject],
-              [day[4].subject, day[5].subject, day[6].subject],
-              [day[7].subject, day[8].subject],
-              [day[0].subject, "Назад"],
-            ],
-          },
-        });
+        // bot.sendMessage(id, html, {
+        //   parse_mode: "HTML",
+        //   disable_notification: true,
+        //   reply_markup: {
+        //     keyboard: [
+        //       [day[1].subject, day[2].subject, day[3].subject],
+        //       [day[4].subject, day[5].subject, day[6].subject],
+        //       [day[7].subject, day[8].subject],
+        //       [day[0].subject, "Назад"],
+        //     ],
+        //   },
+        // });
+        sendMessage(id, html, "teachers", day);
       }
 
       if (day) {
@@ -412,20 +469,13 @@ bot.on("message", async (msg) => {
 
         html = `<strong> Что мне сделать? </strong>`;
 
-        // Sending response message
-        bot.sendMessage(id, html, {
-          parse_mode: "HTML",
-          disable_notification: true,
-          reply_markup: {
-            keyboard: [["Запиши", "Напиши"]],
-          },
-        });
+        sendMessage(id, html, "start");
 
         subj = undefined;
       } else if (msg.text === "Очистить") {
         resetUserId(msg.from.id);
 
-        if (subj.groups === []) {
+        if (subj.groups.length === 0) {
           // updating subj
           subj.text = "";
           // updating cursubj
@@ -446,14 +496,7 @@ bot.on("message", async (msg) => {
 
         html = `<strong> Что мне сделать? </strong>`;
 
-        // Sending response message
-        bot.sendMessage(id, html, {
-          parse_mode: "HTML",
-          disable_notification: true,
-          reply_markup: {
-            keyboard: [["Запиши", "Напиши"]],
-          },
-        });
+        sendMessage(id, html, "start");
 
         subj = undefined;
       } else if (subj === undefined) {
@@ -498,38 +541,17 @@ bot.on("message", async (msg) => {
               teacher = subj.groups[0].teacher;
               group = 0;
 
-              // Sending response message
-              bot.sendMessage(id, html, {
-                parse_mode: "HTML",
-                disable_notification: true,
-                reply_markup: {
-                  keyboard: [["Готово", "Очистить"]],
-                },
-              });
+              sendMessage(id, html, "done");
             } else if (msg.text === subj.groups[1].teacher) {
               teacher = subj.groups[1].teacher;
               group = 1;
 
-              // Sending response message
-              bot.sendMessage(id, html, {
-                parse_mode: "HTML",
-                disable_notification: true,
-                reply_markup: {
-                  keyboard: [["Готово", "Очистить"]],
-                },
-              });
+              sendMessage(id, html, "done");
             } else if (msg.text === subj.groups[2].teacher) {
               teacher = subj.groups[2].teacher;
               group = 2;
 
-              // Sending response message
-              bot.sendMessage(id, html, {
-                parse_mode: "HTML",
-                disable_notification: true,
-                reply_markup: {
-                  keyboard: [["Готово", "Очистить"]],
-                },
-              });
+              sendMessage(id, html, "done");
             }
 
             // Updating data
@@ -577,26 +599,12 @@ bot.on("message", async (msg) => {
               teacher = subj.groups[0].teacher;
               group = 0;
 
-              // Sending response message
-              bot.sendMessage(id, html, {
-                parse_mode: "HTML",
-                disable_notification: true,
-                reply_markup: {
-                  keyboard: [["Готово", "Очистить"]],
-                },
-              });
+              sendMessage(id, html, "done");
             } else if (msg.text === subj.groups[1].teacher) {
               teacher = subj.groups[1].teacher;
               group = 1;
 
-              // Sending response message
-              bot.sendMessage(id, html, {
-                parse_mode: "HTML",
-                disable_notification: true,
-                reply_markup: {
-                  keyboard: [["Готово", "Очистить"]],
-                },
-              });
+              sendMessage(id, html, "done");
             }
 
             // Updating data
@@ -641,26 +649,12 @@ bot.on("message", async (msg) => {
               teacher = subj.groups[0].teacher;
               group = 0;
 
-              // Sending response message
-              bot.sendMessage(id, html, {
-                parse_mode: "HTML",
-                disable_notification: true,
-                reply_markup: {
-                  keyboard: [["Готово", "Очистить"]],
-                },
-              });
+              sendMessage(id, html, "done");
             } else if (msg.text === subj.groups[1].teacher) {
               teacher = subj.groups[1].teacher;
               group = 1;
 
-              // Sending response message
-              bot.sendMessage(id, html, {
-                parse_mode: "HTML",
-                disable_notification: true,
-                reply_markup: {
-                  keyboard: [["Готово", "Очистить"]],
-                },
-              });
+              sendMessage(id, html, "done");
             }
 
             // Updating data
@@ -682,14 +676,7 @@ bot.on("message", async (msg) => {
       <i>Я запишу её как домашка по предмету ${subj.subject}</i>
       `;
 
-        // Sending response message
-        bot.sendMessage(id, html, {
-          parse_mode: "HTML",
-          disable_notification: true,
-          reply_markup: {
-            keyboard: [["Готово", "Очистить"]],
-          },
-        });
+        sendMessage(id, html, "done");
       } else {
         if (msg.text !== undefined) {
           // update data
