@@ -44,6 +44,7 @@ FridaySubj.find((err, msg) => {
 let html,
   day,
   subj,
+  teacher,
   usersType = { give: [], add: [] };
 
 // Create a bot variable - an instance of the TelegramBot class
@@ -424,11 +425,23 @@ bot.on("message", async (msg) => {
       } else if (msg.text === "Очистить") {
         resetUserId(msg.from.id);
 
-        // updating subj
-        subj.text = "";
-        // updating cursubj
-        cursubj.text = "";
-        // saving cursubj to DB
+        if (subj.groups === []) {
+          // updating subj
+          subj.text = "";
+          // updating cursubj
+          cursubj.text = "";
+          // saving cursubj to DB
+        } else {
+          // updating subj
+          subj.groups.forEach((el, i) => {
+            if (el.teacher === teacher) {
+              el.text = "";
+              // updating cursubj
+              cursubj.groups[i].text = "";
+            }
+          });
+        }
+
         await cursubj.save();
 
         html = `<strong> Что мне сделать? </strong>`;
@@ -455,6 +468,8 @@ bot.on("message", async (msg) => {
             if (msg.text === subj.subject) {
               group = undefined;
 
+              html = `В какой ты группе?`;
+
               // Sending response message
               bot.sendMessage(id, html, {
                 parse_mode: "HTML",
@@ -480,6 +495,7 @@ bot.on("message", async (msg) => {
                `;
 
             if (msg.text === subj.groups[0].teacher) {
+              teacher = subj.groups[0].teacher;
               group = 0;
 
               // Sending response message
@@ -491,6 +507,7 @@ bot.on("message", async (msg) => {
                 },
               });
             } else if (msg.text === subj.groups[1].teacher) {
+              teacher = subj.groups[1].teacher;
               group = 1;
 
               // Sending response message
@@ -502,6 +519,7 @@ bot.on("message", async (msg) => {
                 },
               });
             } else if (msg.text === subj.groups[2].teacher) {
+              teacher = subj.groups[2].teacher;
               group = 2;
 
               // Sending response message
@@ -533,6 +551,8 @@ bot.on("message", async (msg) => {
             if (msg.text === subj.subject) {
               group = undefined;
 
+              html = `В какой ты группе?`;
+
               // Sending response message
               bot.sendMessage(id, html, {
                 parse_mode: "HTML",
@@ -554,6 +574,7 @@ bot.on("message", async (msg) => {
                `;
 
             if (msg.text === subj.groups[0].teacher) {
+              teacher = subj.groups[0].teacher;
               group = 0;
 
               // Sending response message
@@ -565,6 +586,7 @@ bot.on("message", async (msg) => {
                 },
               });
             } else if (msg.text === subj.groups[1].teacher) {
+              teacher = subj.groups[1].teacher;
               group = 1;
 
               // Sending response message
@@ -593,11 +615,7 @@ bot.on("message", async (msg) => {
             if (msg.text === subj.subject) {
               group = undefined;
 
-              // day.forEach((el, i) => {
-              //   if(el[i].subject === el[i+1].subject){
-              //     el[i].text = el[i+1].text;
-              //   }
-              // })
+              html = `В какой ты группе?`;
 
               // Sending response message
               bot.sendMessage(id, html, {
@@ -620,6 +638,7 @@ bot.on("message", async (msg) => {
                   `;
 
             if (msg.text === subj.groups[0].teacher) {
+              teacher = subj.groups[0].teacher;
               group = 0;
 
               // Sending response message
@@ -631,6 +650,7 @@ bot.on("message", async (msg) => {
                 },
               });
             } else if (msg.text === subj.groups[1].teacher) {
+              teacher = subj.groups[1].teacher;
               group = 1;
 
               // Sending response message
