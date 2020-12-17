@@ -132,6 +132,19 @@ const giveHomework = (day) => {
   return data;
 };
 
+const resetUserId = (userID) => {
+  usersType.give.forEach((el, i) => {
+    if (el === userID) {
+      usersType.give.splice(i, 1);
+    }
+  });
+  usersType.add.forEach((el, i) => {
+    if (el === userID) {
+      usersType.add.splice(i, 1);
+    }
+  });
+};
+
 // COMMAND LISTENERS
 
 bot.onText(/\/start/, (msg) => {
@@ -234,17 +247,7 @@ bot.onText(/Назад/, (msg) => {
     return;
   }
 
-  // Reset user id
-  usersType.give.forEach((el, i) => {
-    if (el === msg.from.id) {
-      usersType.give.splice(i, 1);
-    }
-  });
-  usersType.add.forEach((el, i) => {
-    if (el === msg.from.id) {
-      usersType.add.splice(i, 1);
-    }
-  });
+  resetUserId(msg.from.id);
 
   // Creating response message
   html = `
@@ -404,17 +407,7 @@ bot.on("message", async (msg) => {
       }
 
       if (msg.text === "Готово") {
-        // Reset user id
-        usersType.give.forEach((el, i) => {
-          if (el === msg.from.id) {
-            usersType.give.splice(i, 1);
-          }
-        });
-        usersType.add.forEach((el, i) => {
-          if (el === msg.from.id) {
-            usersType.add.splice(i, 1);
-          }
-        });
+        resetUserId(msg.from.id);
 
         html = `<strong> Что мне сделать? </strong>`;
 
@@ -429,6 +422,8 @@ bot.on("message", async (msg) => {
 
         subj = undefined;
       } else if (msg.text === "Очистить") {
+        resetUserId(msg.from.id);
+
         // updating subj
         subj.text = "";
         // updating cursubj
@@ -492,7 +487,7 @@ bot.on("message", async (msg) => {
                 parse_mode: "HTML",
                 disable_notification: true,
                 reply_markup: {
-                  keyboard: [["Готово"]],
+                  keyboard: [["Готово", "Очистить"]],
                 },
               });
             } else if (msg.text === subj.groups[1].teacher) {
@@ -503,7 +498,7 @@ bot.on("message", async (msg) => {
                 parse_mode: "HTML",
                 disable_notification: true,
                 reply_markup: {
-                  keyboard: [["Готово"]],
+                  keyboard: [["Готово", "Очистить"]],
                 },
               });
             } else if (msg.text === subj.groups[2].teacher) {
@@ -514,7 +509,7 @@ bot.on("message", async (msg) => {
                 parse_mode: "HTML",
                 disable_notification: true,
                 reply_markup: {
-                  keyboard: [["Готово"]],
+                  keyboard: [["Готово", "Очистить"]],
                 },
               });
             }
@@ -566,7 +561,7 @@ bot.on("message", async (msg) => {
                 parse_mode: "HTML",
                 disable_notification: true,
                 reply_markup: {
-                  keyboard: [["Готово"]],
+                  keyboard: [["Готово", "Очистить"]],
                 },
               });
             } else if (msg.text === subj.groups[1].teacher) {
@@ -577,7 +572,7 @@ bot.on("message", async (msg) => {
                 parse_mode: "HTML",
                 disable_notification: true,
                 reply_markup: {
-                  keyboard: [["Готово"]],
+                  keyboard: [["Готово", "Очистить"]],
                 },
               });
             }
@@ -632,7 +627,7 @@ bot.on("message", async (msg) => {
                 parse_mode: "HTML",
                 disable_notification: true,
                 reply_markup: {
-                  keyboard: [["Готово"]],
+                  keyboard: [["Готово", "Очистить"]],
                 },
               });
             } else if (msg.text === subj.groups[1].teacher) {
@@ -643,7 +638,7 @@ bot.on("message", async (msg) => {
                 parse_mode: "HTML",
                 disable_notification: true,
                 reply_markup: {
-                  keyboard: [["Готово"]],
+                  keyboard: [["Готово", "Очистить"]],
                 },
               });
             }
@@ -672,7 +667,7 @@ bot.on("message", async (msg) => {
           parse_mode: "HTML",
           disable_notification: true,
           reply_markup: {
-            keyboard: [["Готово"]],
+            keyboard: [["Готово", "Очистить"]],
           },
         });
       } else {
