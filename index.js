@@ -1,6 +1,3 @@
-// core moduels
-const fs = require("fs");
-
 // 3-rd party Moduels
 const TelegramBot = require("node-telegram-bot-api");
 const dotenv = require("dotenv");
@@ -13,7 +10,6 @@ const {
   ThursdaySubj,
   FridaySubj,
 } = require("./models/subjectModel");
-const { send } = require("process");
 
 dotenv.config({ path: "./config.env" }); // defining environment variables
 mongoose.connect(process.env.MONGO_URL); // connecting to MongoDB
@@ -224,14 +220,6 @@ bot.onText(/\/start/, (msg) => {
   <i>Меня зовут лягушонок ПЕПЕ и я нужен для того чтобы помочь разобраться с этой глупой домашкой!</i>
   <pre>Выбери что тебе нужно: Чтобы я записал или написал домашку</pre>`;
 
-  // Sending response message
-  // bot.sendMessage(id, html, {
-  //   parse_mode: "HTML",
-  //   disable_notification: true,
-  //   reply_markup: {
-  //     keyboard: [["Запиши", "Напиши"]],
-  //   },
-  // });
   sendMessage(id, html, "start");
 });
 
@@ -250,18 +238,6 @@ bot.onText(/Напиши/, (msg) => {
     <strong>${msg.from.first_name},</strong>
     <i>За какой день скинуть дз?</i>`;
 
-  // Sending response message
-  // bot.sendMessage(id, html, {
-  //   parse_mode: "HTML",
-  //   disable_notification: true,
-  //   reply_markup: {
-  //     keyboard: [
-  //       ["Понедельник", "Вторник", "Среда"],
-  //       ["Четверг", "Пятница"],
-  //       ["Назад"],
-  //     ],
-  //   },
-  // });
   sendMessage(id, html, "days");
 });
 
@@ -280,18 +256,6 @@ bot.onText(/Запиши/, (msg) => {
       <strong>${msg.from.first_name},</strong>
       <i>На когда записать дз?</i>`;
 
-  // Sending response message
-  // bot.sendMessage(id, html, {
-  //   parse_mode: "HTML",
-  //   disable_notification: true,
-  //   reply_markup: {
-  //     keyboard: [
-  //       ["Понедельник", "Вторник", "Среда"],
-  //       ["Четверг", "Пятница"],
-  //       ["Назад"],
-  //     ],
-  //   },
-  // });
   sendMessage(id, html, "days");
 });
 
@@ -309,14 +273,6 @@ bot.onText(/Назад/, (msg) => {
         <strong>${msg.from.first_name},</strong>
         <i>Что мне сделать?</i>`;
 
-  // Sending response message
-  // bot.sendMessage(id, html, {
-  //   parse_mode: "HTML",
-  //   disable_notification: true,
-  //   reply_markup: {
-  //     keyboard: [["Запиши", "Напиши"]],
-  //   },
-  // });
   sendMessage(id, html, "start");
 });
 
@@ -370,18 +326,6 @@ bot.on("message", async (msg) => {
       <strong>Домашка:</strong>
     <i>${homeworkData}</i>`;
 
-      // Sending response message
-      // bot.sendMessage(id, html, {
-      //   parse_mode: "HTML",
-      //   disable_notification: true,
-      //   reply_markup: {
-      //     keyboard: [
-      //       ["Понедельник", "Вторник", "Среда"],
-      //       ["Четверг", "Пятница"],
-      //       ["Назад"],
-      //     ],
-      //   },
-      // });
       sendMessage(id, html, "days");
     } else if (type === "add") {
       const { id } = msg.chat;
@@ -415,19 +359,6 @@ bot.on("message", async (msg) => {
         html = `
     <strong>Какой предмет хочешь запиcать?</strong>`;
 
-        // Sending response message
-        // bot.sendMessage(id, html, {
-        //   parse_mode: "HTML",
-        //   disable_notification: true,
-        //   reply_markup: {
-        //     keyboard: [
-        //       [day[1].subject, day[2].subject, day[3].subject],
-        //       [day[4].subject, day[5].subject, day[6].subject],
-        //       [day[7].subject, day[8].subject],
-        //       [day[0].subject, "Назад"],
-        //     ],
-        //   },
-        // });
         sendMessage(id, html, "teachers", day);
       }
 
