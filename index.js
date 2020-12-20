@@ -60,14 +60,42 @@ console.log("Bot have been started...");
 // FUNCTIONS
 
 const giveHomework = (day) => {
-  let data = ``; // clear previous data
+  let data = ``,
+    photos = [], // arr to store all photos of the day
+    photo, // [PHOTO] that is attached to each homework that has a photo
+    groupPhoto = []; // [PHOTO] that is attached to each homework that has a photo and divided into groups
 
   // Looping over each object to define the one that is divided into groups and additional info object
   day.forEach((el, index) => {
+    if (day[index - 1] !== undefined && day[index - 1].subject !== el.subject) {
+      groupPhoto = [];
+    }
+
+    // add [PHOTO] at the end of homework that has photo
+    if (el.groups.length === 0) {
+      el.photo ? (photo = "[PHOTO]") : (photo = "");
+    } else if (day[index - 1].subject === el.subject) {
+    } else {
+      el.groups.forEach((group) => {
+        group.photo ? groupPhoto.push("[PHOTO]") : groupPhoto.push("");
+      });
+    }
+
+    // add all photos of the day to photos array
+    if (el.groups.length === 0 && el.photo !== "") {
+      photos.push(el.photo);
+    } else {
+      el.groups.forEach((el) => {
+        if (el.photo !== "") {
+          photos.push(el.photo);
+        }
+      });
+    }
+
     switch (el.subject) {
       case "Доп. инфа":
         // if current element is 'additional info' - add it to data without numbering in the list
-        data += `<strong>${el.subject}:</strong> ${el.text}
+        data += `<strong>${el.subject}:</strong> ${el.text} ${photo}
     `;
 
         break;
@@ -76,9 +104,9 @@ const giveHomework = (day) => {
 
         if (day[index - 1].subject === el.subject) {
           groupdataEng = `
-        Н.А: ${day[index - 1].groups[0].text}
-        А.П: ${day[index - 1].groups[1].text}
-        А.Г: ${day[index - 1].groups[2].text}`;
+        Н.А: ${day[index - 1].groups[0].text} ${groupPhoto[0]}
+        А.П: ${day[index - 1].groups[1].text} ${groupPhoto[1]}
+        А.Г: ${day[index - 1].groups[2].text} ${groupPhoto[2]}`;
 
           data += `<strong>${index}.${el.subject}:</strong> ${groupdataEng}
     `;
@@ -87,9 +115,9 @@ const giveHomework = (day) => {
     `;
         } else {
           groupdataEng = `
-        Н.А: ${el.groups[0].text}
-        А.П: ${el.groups[1].text}
-        А.Г: ${el.groups[2].text}`;
+        Н.А: ${el.groups[0].text} ${groupPhoto[0]}
+        А.П: ${el.groups[1].text} ${groupPhoto[1]}
+        А.Г: ${el.groups[2].text} ${groupPhoto[2]}`;
 
           data += `<strong>${index}.${el.subject}:</strong> ${groupdataEng}
     `;
@@ -99,8 +127,8 @@ const giveHomework = (day) => {
         // if current element is Spanish - add it to data with groups as child elements
 
         groupdataEsp = `
-        Л.В: ${el.groups[0].text}
-        С.Л: ${el.groups[1].text}`;
+        Л.В: ${el.groups[0].text} ${groupPhoto[0]}
+        С.Л: ${el.groups[1].text} ${groupPhoto[1]}`;
 
         data += `<strong>${index}.${el.subject}:</strong> ${groupdataEsp}
     `;
@@ -109,8 +137,8 @@ const giveHomework = (day) => {
         // if current element is Ukrainian - add it to data with groups as child elements
         if (day[index - 1].subject === el.subject) {
           groupdataUkr = `
-        А.В: ${day[index - 1].groups[0].text}
-        Л.А: ${day[index - 1].groups[1].text}`;
+        А.В: ${day[index - 1].groups[0].text} ${groupPhoto[0]} 
+        Л.А: ${day[index - 1].groups[1].text} ${groupPhoto[1]}`;
 
           data += `<strong>${index}.${el.subject}:</strong> ${groupdataUkr}
     `;
@@ -123,11 +151,11 @@ const giveHomework = (day) => {
         break;
       default:
         // if current element isn't additional info or one with groups - add it to data
-        data += `<strong>${index}.${el.subject}:</strong> ${el.text}
+        data += `<strong>${index}.${el.subject}:</strong> ${el.text} ${photo}
     `;
     }
   });
-  return data;
+  return [data, photos];
 };
 
 const resetUserId = (userID) => {
@@ -277,7 +305,6 @@ bot.onText(/Назад/, (msg) => {
 });
 
 // ALL MESSAGE LISTENER
-
 bot.on("message", async (msg) => {
   try {
     const { id } = msg.chat;
@@ -324,9 +351,19 @@ bot.on("message", async (msg) => {
       // Creating response message
       html = `
       <strong>Домашка:</strong>
-    <i>${homeworkData}</i>`;
+    <i>${homeworkData[0]}</i>`;
 
       sendMessage(id, html, "days");
+
+      if (homeworkData[1].length !== 0) {
+        homeworkData[1].forEach((el) => {
+          // Sending photos
+          bot.sendPhoto(id, el, {
+            parse_mode: "HTML",
+            disable_notification: true,
+          });
+        });
+      }
     } else if (type === "add") {
       const { id } = msg.chat;
       let isDay, cursubj;
@@ -409,16 +446,19 @@ bot.on("message", async (msg) => {
         if (subj.groups.length === 0) {
           // updating subj
           subj.text = "";
+          subj.photo = "";
           // updating cursubj
           cursubj.text = "";
-          // saving cursubj to DB
+          cursubj.photo = "";
         } else {
           // updating subj
           subj.groups.forEach((el, i) => {
             if (el.teacher === teacher) {
               el.text = "";
+              el.photo = "";
               // updating cursubj
               cursubj.groups[i].text = "";
+              cursubj.groups[i].photo = "";
             }
           });
         }
@@ -461,95 +501,8 @@ bot.on("message", async (msg) => {
                 },
               });
             }
-
-            // Creating response message
-            html = `
-               <strong>Скидывай текст с домашкой</strong>
-               <i>Я запишу её как домашка по предмету ${subj.subject}</i>
-               `;
-
-            if (msg.text === subj.groups[0].teacher) {
-              teacher = subj.groups[0].teacher;
-              group = 0;
-
-              sendMessage(id, html, "done");
-            } else if (msg.text === subj.groups[1].teacher) {
-              teacher = subj.groups[1].teacher;
-              group = 1;
-
-              sendMessage(id, html, "done");
-            } else if (msg.text === subj.groups[2].teacher) {
-              teacher = subj.groups[2].teacher;
-              group = 2;
-
-              sendMessage(id, html, "done");
-            }
-
-            // Updating data
-            if (group === 0) {
-              subj.groups[0].text = msg.text;
-              cursubj.groups[0].text = msg.text;
-            } else if (group === 1) {
-              subj.groups[1].text = msg.text;
-              cursubj.groups[1].text = msg.text;
-            } else if (group === 2) {
-              subj.groups[2].text = msg.text;
-              cursubj.groups[2].text = msg.text;
-            }
-
-            // Saving data to DB
-            await cursubj.save();
             break;
           case "Испанский":
-            if (msg.text === subj.subject) {
-              group = undefined;
-
-              html = `В какой ты группе?`;
-
-              // Sending response message
-              bot.sendMessage(id, html, {
-                parse_mode: "HTML",
-                disable_notification: true,
-                reply_markup: {
-                  // remove_keyboard: isback,
-                  keyboard: [
-                    [subj.groups[0].teacher, subj.groups[1].teacher],
-                    ["Назад"],
-                  ],
-                },
-              });
-            }
-
-            // Creating response message
-            html = `
-               <strong>Скидывай текст с домашкой</strong>
-               <i>Я запишу её как домашка по предмету ${subj.subject}</i>
-               `;
-
-            if (msg.text === subj.groups[0].teacher) {
-              teacher = subj.groups[0].teacher;
-              group = 0;
-
-              sendMessage(id, html, "done");
-            } else if (msg.text === subj.groups[1].teacher) {
-              teacher = subj.groups[1].teacher;
-              group = 1;
-
-              sendMessage(id, html, "done");
-            }
-
-            // Updating data
-            if (group === 0) {
-              subj.groups[0].text = msg.text;
-              cursubj.groups[0].text = msg.text;
-            } else if (group === 1) {
-              subj.groups[1].text = msg.text;
-              cursubj.groups[1].text = msg.text;
-            }
-
-            // Saving data to DB
-            await cursubj.save();
-            break;
           case "Украинский":
             if (msg.text === subj.subject) {
               group = undefined;
@@ -569,41 +522,56 @@ bot.on("message", async (msg) => {
                 },
               });
             }
+        }
 
+        subj.groups.forEach((el) => {
+          if (msg.text === el.teacher) {
             // Creating response message
             html = `
-                  <strong>Скидывай текст с домашкой</strong>
-                  <i>Я запишу её как домашка по предмету ${subj.subject}</i>
-                  `;
+          <strong>Скидывай текст или/и фото с домашкой</strong>
+          <i>Я запишу её как домашка по предмету ${subj.subject}</i>
+          `;
+            sendMessage(id, html, "done");
 
-            if (msg.text === subj.groups[0].teacher) {
-              teacher = subj.groups[0].teacher;
-              group = 0;
-
-              sendMessage(id, html, "done");
-            } else if (msg.text === subj.groups[1].teacher) {
-              teacher = subj.groups[1].teacher;
-              group = 1;
-
-              sendMessage(id, html, "done");
+            switch (msg.text) {
+              case subj.groups[0].teacher:
+                teacher = subj.groups[0].teacher;
+                group = 0;
+                break;
+              case subj.groups[1].teacher:
+                teacher = subj.groups[1].teacher;
+                group = 1;
+                break;
+              case subj.groups[2].teacher:
+                teacher = subj.groups[2].teacher;
+                group = 2;
+                break;
             }
+          }
+        });
 
-            // Updating data
-            if (group === 0) {
-              subj.groups[0].text = msg.text;
-              cursubj.groups[0].text = msg.text;
-            } else if (group === 1) {
-              subj.groups[1].text = msg.text;
-              cursubj.groups[1].text = msg.text;
-            }
+        if (
+          msg.text === subj.groups[0].teacher ||
+          msg.text === subj.groups[1].teacher ||
+          (subj.groups[2] !== undefined && msg.text === subj.groups[2].teacher)
+        )
+          return;
 
-            // Saving data to DB
-            await cursubj.save();
+        if (group !== undefined) {
+          if (msg.text !== undefined) {
+            subj.groups[group].text = msg.text;
+            cursubj.groups[group].text = msg.text;
+          } else {
+            subj.groups[group].photo = msg.photo[2].file_id;
+            cursubj.groups[group].photo = msg.photo[2].file_id;
+          }
+          // Saving data to DB
+          await cursubj.save();
         }
       } else if (msg.text === subj.subject) {
         // Creating response message
         html = `
-      <strong>Скидывай текст с домашкой</strong>
+      <strong>Скидывай текст или/и фото с домашкой</strong>
       <i>Я запишу её как домашка по предмету ${subj.subject}</i>
       `;
 
@@ -613,9 +581,13 @@ bot.on("message", async (msg) => {
           // update data
           subj.text = msg.text;
           cursubj.text = msg.text;
-          // saving cursubj to DB
-          await cursubj.save();
+        } else {
+          // update data
+          subj.photo = msg.photo[2].file_id;
+          cursubj.photo = msg.photo[2].file_id;
         }
+        // Saving data to DB
+        await cursubj.save();
       }
     }
   } catch (err) {
@@ -656,7 +628,7 @@ setInterval(() => {
     // Creating response message
     const html = `
             <strong>Домашка на завтра:</strong>
-      <i>${data}</i>
+      <i>${data[0]}</i>
             `;
 
     // Sending response message
@@ -664,6 +636,16 @@ setInterval(() => {
       parse_mode: "HTML",
       disable_notification: true,
     });
+
+    if (data[1].length !== 0) {
+      data[1].forEach((el) => {
+        // Sending photos
+        bot.sendPhoto(chatId, el, {
+          parse_mode: "HTML",
+          disable_notification: true,
+        });
+      });
+    }
   }
 }, 59000);
 
