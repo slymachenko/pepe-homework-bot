@@ -230,9 +230,8 @@ bot.onText(/\/start/, (msg) => {
     // Creating response message
     html = `
   <strong>Привет, ${msg.from.first_name}!</strong>
-  <i>Меня зовут лягушонок ПЕПЕ и я нужен для того чтобы помочь разобраться с этой глупой домашкой!
-  Сюда я буду кидать домашку на завтра, а если хочешь узнать или записать что-то - Добро пожаловать в Личные сообщения</i>
-  <pre>Выбери что тебе нужно: Чтобы я записал или написал домашку</pre>`;
+  <i>Меня зовут лягушонок ПЕПЕ и я нужен для того чтобы помочь разобраться с этой глупой домашкой!</i>
+  <pre>Сюда я буду кидать домашку на завтра, а если хочешь узнать или записать что-то - жду тебя в личных сообщениях</pre>`;
 
     // Sending response message
     bot.sendMessage(id, html, {
@@ -249,6 +248,15 @@ bot.onText(/\/start/, (msg) => {
   <pre>Выбери что тебе нужно: Чтобы я записал или написал домашку</pre>`;
 
   sendMessage(id, html, "start");
+});
+
+bot.onText(/\/getchatid/, (msg) => {
+  const { id } = msg.chat;
+  html = `<strong>ID of the Chat => ${msg.chat.id}</strong>`;
+  bot.sendMessage(id, html, {
+    parse_mode: "HTML",
+    disable_notification: true,
+  });
 });
 
 bot.onText(/Напиши/, (msg) => {
