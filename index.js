@@ -250,14 +250,14 @@ bot.onText(/\/start/, (msg) => {
   sendMessage(id, html, "start");
 });
 
-bot.onText(/\/getchatid/, (msg) => {
-  const { id } = msg.chat;
-  html = `<strong>ID of the Chat => ${msg.chat.id}</strong>`;
-  bot.sendMessage(id, html, {
-    parse_mode: "HTML",
-    disable_notification: true,
-  });
-});
+// bot.onText(/\/getchatid/, (msg) => {
+//   const { id } = msg.chat;
+//   html = `<strong>ID of the Chat => ${msg.chat.id}</strong>`;
+//   bot.sendMessage(id, html, {
+//     parse_mode: "HTML",
+//     disable_notification: true,
+//   });
+// });
 
 bot.onText(/Напиши/, (msg) => {
   const { id } = msg.chat;
