@@ -611,7 +611,7 @@ setInterval(() => {
 
   // Checking whether current date match needed date
   if (
-    date.getHours() === 17 &&
+    date.getHours() === 15 &&
     date.getMinutes() === 00 &&
     date.getDay() !== 6 &&
     date.getDay() !== 5
