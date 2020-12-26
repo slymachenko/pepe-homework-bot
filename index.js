@@ -679,9 +679,10 @@ setInterval(() => {
 
 bot.on("polling_error", (err) => console.log(err));
 
-// require("http")
-//   .createServer()
-//   .listen(process.env.PORT || 5000)
-//   .on("request", function (req, res) {
-//     res.end("");
-//   });
+// Sending an empty HTTP response on request
+require("http")
+  .createServer()
+  .listen(process.env.PORT || 5000)
+  .on("request", function (req, res) {
+    res.end("");
+  });
