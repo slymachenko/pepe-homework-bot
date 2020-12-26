@@ -174,6 +174,7 @@ const resetUserId = (userID) => {
 const sendMessage = (id, html, type, day) => {
   switch (type) {
     case "start":
+      // Sending response message
       bot.sendMessage(id, html, {
         parse_mode: "HTML",
         disable_notification: true,
@@ -183,6 +184,7 @@ const sendMessage = (id, html, type, day) => {
       });
       break;
     case "days":
+      // Sending response message
       bot.sendMessage(id, html, {
         parse_mode: "HTML",
         disable_notification: true,
@@ -195,7 +197,12 @@ const sendMessage = (id, html, type, day) => {
         },
       });
       break;
-    case "teachers":
+    case "subjects":
+      // Creating response message
+      html = `
+      <strong>Какой предмет хочешь запиcать?</strong>`;
+
+      // Sending response message
       bot.sendMessage(id, html, {
         parse_mode: "HTML",
         disable_notification: true,
@@ -210,6 +217,13 @@ const sendMessage = (id, html, type, day) => {
       });
       break;
     case "done":
+      // Creating response message
+      html = `
+      <strong>Скидывай текст или/и фото с домашкой</strong>
+      <i>Я запишу её как домашка по предмету ${subj.subject}</i>
+      `;
+
+      // Sending response message
       bot.sendMessage(id, html, {
         parse_mode: "HTML",
         disable_notification: true,
@@ -218,50 +232,93 @@ const sendMessage = (id, html, type, day) => {
         },
       });
       break;
+    case "teachers-2":
+      // Creating response message
+      html = `В какой ты группе?`;
+
+      // Sending response message
+      bot.sendMessage(id, html, {
+        parse_mode: "HTML",
+        disable_notification: true,
+        reply_markup: {
+          keyboard: [
+            [subj.groups[0].teacher, subj.groups[1].teacher],
+            ["Назад"],
+          ],
+        },
+      });
+      break;
+    case "teachers-3":
+      // Creating response message
+      html = `В какой ты группе?`;
+
+      // Sending response message
+      bot.sendMessage(id, html, {
+        parse_mode: "HTML",
+        disable_notification: true,
+        reply_markup: {
+          keyboard: [
+            [
+              subj.groups[0].teacher,
+              subj.groups[1].teacher,
+              subj.groups[2].teacher,
+            ],
+            ["Назад"],
+          ],
+        },
+      });
+      break;
+    case "none":
+      // Sending response message
+      bot.sendMessage(id, html, {
+        parse_mode: "HTML",
+        disable_notification: true,
+      });
+      break;
   }
 };
 
 // COMMAND LISTENERS
 
-bot.onText(/\/start/, (msg) => {
+bot.onText(/^\/start$/, (msg) => {
   const { id } = msg.chat;
-
-  if (msg.chat.id !== msg.from.id) {
-    // Creating response message
-    html = `
-  <strong>Привет, ${msg.from.first_name}!</strong>
-  <i>Меня зовут лягушонок ПЕПЕ и я нужен для того чтобы помочь разобраться с этой глупой домашкой!</i>
-  <pre>Сюда я буду кидать домашку на завтра, а если хочешь узнать или записать что-то - жду тебя в личных сообщениях</pre>`;
-
-    // Sending response message
-    bot.sendMessage(id, html, {
-      parse_mode: "HTML",
-      disable_notification: true,
-    });
-    return;
-  }
 
   // Creating response message
   html = `
   <strong>Привет, ${msg.from.first_name}!</strong>
-  <i>Меня зовут лягушонок ПЕПЕ и я нужен для того чтобы помочь разобраться с этой глупой домашкой!</i>
+  <i>Меня зовут лягушонок ПЕПЕ и я нужен для того чтобы помочь разобраться с этой глупой домашкой!</i>`;
+
+  if (msg.chat.id !== msg.from.id) {
+    // Creating response message
+    html += `
+  <pre>Сюда я буду кидать домашку на завтра, а если хочешь узнать или записать что-то - жду тебя в личных сообщениях</pre>`;
+
+    // Sending response message
+    sendMessage(id, html, "none");
+    return;
+  }
+
+  // Creating response message
+  html += `
   <pre>Выбери что тебе нужно: Чтобы я записал или написал домашку</pre>`;
 
+  // Sending response message
   sendMessage(id, html, "start");
 });
 
+// Sends id of the chat with '/getchatid' command
 // bot.onText(/\/getchatid/, (msg) => {
 //   const { id } = msg.chat;
+//   // Creating response message
 //   html = `<strong>ID of the Chat => ${msg.chat.id}</strong>`;
-//   bot.sendMessage(id, html, {
-//     parse_mode: "HTML",
-//     disable_notification: true,
-//   });
+//   // Sending response message
+//   sendMessage(id, html, 'none');
 // });
 
-bot.onText(/Напиши/, (msg) => {
+bot.onText(/^Напиши$/, (msg) => {
   const { id } = msg.chat;
 
+  // Ignore any chat message
   if (msg.chat.id !== msg.from.id) {
     return;
   }
@@ -274,12 +331,14 @@ bot.onText(/Напиши/, (msg) => {
     <strong>${msg.from.first_name},</strong>
     <i>За какой день скинуть дз?</i>`;
 
+  // Sending response message
   sendMessage(id, html, "days");
 });
 
-bot.onText(/Запиши/, (msg) => {
+bot.onText(/^Запиши$/, (msg) => {
   const { id } = msg.chat;
 
+  // Ignore any chat message
   if (msg.chat.id !== msg.from.id) {
     return;
   }
@@ -292,12 +351,14 @@ bot.onText(/Запиши/, (msg) => {
       <strong>${msg.from.first_name},</strong>
       <i>На когда записать дз?</i>`;
 
+  // Sending response message
   sendMessage(id, html, "days");
 });
 
-bot.onText(/Назад/, (msg) => {
+bot.onText(/^Назад$/, (msg) => {
   const { id } = msg.chat;
 
+  // Ignore any chat message
   if (msg.chat.id !== msg.from.id) {
     return;
   }
@@ -309,6 +370,7 @@ bot.onText(/Назад/, (msg) => {
         <strong>${msg.from.first_name},</strong>
         <i>Что мне сделать?</i>`;
 
+  // Sending response message
   sendMessage(id, html, "start");
 });
 
@@ -316,9 +378,9 @@ bot.onText(/Назад/, (msg) => {
 bot.on("message", async (msg) => {
   try {
     const { id } = msg.chat;
-
     let homeworkData, type;
 
+    // Ignore any chat message
     if (msg.chat.id !== msg.from.id) {
       return;
     }
@@ -361,6 +423,7 @@ bot.on("message", async (msg) => {
       <strong>Домашка:</strong>
     <i>${homeworkData[0]}</i>`;
 
+      // Sending response message
       sendMessage(id, html, "days");
 
       if (homeworkData[1].length !== 0) {
@@ -374,8 +437,8 @@ bot.on("message", async (msg) => {
       }
     } else if (type === "add") {
       const { id } = msg.chat;
-      let isDay, cursubj;
-      isDay = true;
+      let isDay = true,
+        cursubj;
 
       switch (msg.text) {
         case "Понедельник":
@@ -400,11 +463,8 @@ bot.on("message", async (msg) => {
       }
 
       if (isDay) {
-        // Creating response message
-        html = `
-    <strong>Какой предмет хочешь запиcать?</strong>`;
-
-        sendMessage(id, html, "teachers", day);
+        // Creating and Sending response message
+        sendMessage(id, html, "subjects", day);
       }
 
       if (day) {
@@ -418,6 +478,7 @@ bot.on("message", async (msg) => {
           }
         });
       }
+
       if (subj) {
         switch (day) {
           case homework.Monday:
@@ -443,28 +504,29 @@ bot.on("message", async (msg) => {
       if (msg.text === "Готово") {
         resetUserId(msg.from.id);
 
+        // Creating response message
         html = `<strong> Что мне сделать? </strong>`;
 
+        // Sending response message
         sendMessage(id, html, "start");
 
         subj = undefined;
       } else if (msg.text === "Очистить") {
         resetUserId(msg.from.id);
 
+        // Clear subj and cursubj
         if (subj.groups.length === 0) {
-          // updating subj
+          // case this subject without groups
           subj.text = "";
           subj.photo = "";
-          // updating cursubj
           cursubj.text = "";
           cursubj.photo = "";
         } else {
-          // updating subj
+          // case this subject is divided in groups
           subj.groups.forEach((el, i) => {
             if (el.teacher === teacher) {
               el.text = "";
               el.photo = "";
-              // updating cursubj
               cursubj.groups[i].text = "";
               cursubj.groups[i].photo = "";
             }
@@ -473,41 +535,23 @@ bot.on("message", async (msg) => {
 
         await cursubj.save();
 
+        // Creating response message
         html = `<strong> Что мне сделать? </strong>`;
 
+        // Sending response message
         sendMessage(id, html, "start");
 
         subj = undefined;
       } else if (subj === undefined) {
         return;
-      } else if (
-        subj.subject === "Английский" ||
-        subj.subject === "Украинский" ||
-        subj.subject === "Испанский"
-      ) {
+      } else if (subj.groups.length > 0) {
         switch (subj.subject) {
           case "Английский":
             if (msg.text === subj.subject) {
               group = undefined;
 
-              html = `В какой ты группе?`;
-
-              // Sending response message
-              bot.sendMessage(id, html, {
-                parse_mode: "HTML",
-                disable_notification: true,
-                reply_markup: {
-                  // remove_keyboard: isback,
-                  keyboard: [
-                    [
-                      subj.groups[0].teacher,
-                      subj.groups[1].teacher,
-                      subj.groups[2].teacher,
-                    ],
-                    ["Назад"],
-                  ],
-                },
-              });
+              // Creating and Sending response message
+              sendMessage(id, html, "teachers-3");
             }
             break;
           case "Испанский":
@@ -515,30 +559,14 @@ bot.on("message", async (msg) => {
             if (msg.text === subj.subject) {
               group = undefined;
 
-              html = `В какой ты группе?`;
-
-              // Sending response message
-              bot.sendMessage(id, html, {
-                parse_mode: "HTML",
-                disable_notification: true,
-                reply_markup: {
-                  // remove_keyboard: isback,
-                  keyboard: [
-                    [subj.groups[0].teacher, subj.groups[1].teacher],
-                    ["Назад"],
-                  ],
-                },
-              });
+              // Creating and Sending response message
+              sendMessage(id, html, "teachers-2");
             }
         }
 
         subj.groups.forEach((el) => {
           if (msg.text === el.teacher) {
-            // Creating response message
-            html = `
-          <strong>Скидывай текст или/и фото с домашкой</strong>
-          <i>Я запишу её как домашка по предмету ${subj.subject}</i>
-          `;
+            // Sending response message
             sendMessage(id, html, "done");
 
             switch (msg.text) {
@@ -577,12 +605,7 @@ bot.on("message", async (msg) => {
           await cursubj.save();
         }
       } else if (msg.text === subj.subject) {
-        // Creating response message
-        html = `
-      <strong>Скидывай текст или/и фото с домашкой</strong>
-      <i>Я запишу её как домашка по предмету ${subj.subject}</i>
-      `;
-
+        // Creating and Sending response message
         sendMessage(id, html, "done");
       } else {
         if (msg.text !== undefined) {
@@ -640,10 +663,7 @@ setInterval(() => {
             `;
 
     // Sending response message
-    bot.sendMessage(chatId, html, {
-      parse_mode: "HTML",
-      disable_notification: true,
-    });
+    sendMessage(id, html, "none");
 
     if (data[1].length !== 0) {
       data[1].forEach((el) => {
@@ -659,9 +679,9 @@ setInterval(() => {
 
 bot.on("polling_error", (err) => console.log(err));
 
-require("http")
-  .createServer()
-  .listen(process.env.PORT || 5000)
-  .on("request", function (req, res) {
-    res.end("");
-  });
+// require("http")
+//   .createServer()
+//   .listen(process.env.PORT || 5000)
+//   .on("request", function (req, res) {
+//     res.end("");
+//   });
