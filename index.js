@@ -19,7 +19,8 @@ const TOKEN = process.env.TOKEN;
 const chatId = process.env.CHAT_ID; // variable needed to define the chat to which next day homework is sent
 
 // Creating homework object with data taken from the database
-let homework = {};
+let homework = {},
+  hwMailing = false;
 
 MondaySubj.find((err, msg) => {
   homework.Monday = msg;
@@ -307,13 +308,14 @@ bot.onText(/^\/start$/, (msg) => {
 });
 
 // Sends id of the chat with '/getchatid' command
-// bot.onText(/\/getchatid/, (msg) => {
-//   const { id } = msg.chat;
-//   // Creating response message
-//   html = `<strong>ID of the Chat => ${msg.chat.id}</strong>`;
-//   // Sending response message
-//   sendMessage(id, html, 'none');
-// });
+bot.onText(/\/getchatid/, (msg) => {
+  const { id } = msg.chat;
+
+  // Creating response message
+  html = `<strong>${msg.from.first_name}, ID of the Chat => ${msg.chat.id}</strong>`;
+  // Sending response message
+  sendMessage(id, html, "none");
+});
 
 bot.onText(/^Напиши$/, (msg) => {
   const { id } = msg.chat;
@@ -372,6 +374,59 @@ bot.onText(/^Назад$/, (msg) => {
 
   // Sending response message
   sendMessage(id, html, "start");
+});
+
+bot.onText(/^\/hwmailing (.+)/, (msg, match) => {
+  const { id } = msg.chat;
+
+  // Ignore any chat message
+  if (msg.chat.id !== msg.from.id) {
+    return;
+  }
+
+  if (match[1] === "on" && chatId !== undefined) {
+    hwMailing = true;
+
+    // Creating response message
+    html = `
+        <strong>${msg.from.first_name},</strong>
+        <i>Рассылка домашки в группу включена</i>`;
+
+    // Sending response message
+    sendMessage(id, html, "start");
+  } else if (match[1] === "off" && chatId !== undefined) {
+    hwMailing = false;
+
+    // Creating response message
+    html = `
+        <strong>${msg.from.first_name},</strong>
+        <i>Рассылка домашки в группу отключена</i>`;
+
+    // Sending response message
+    sendMessage(id, html, "start");
+  } else if (chatId === undefined) {
+    // Creating response message
+    html = `
+        <strong>${msg.from.first_name},</strong>
+        <i>Напиши /hwmailing и через пробел напиши id группы</i>
+        Напимер:
+        <pre>/hwmailing -1234567</pre>`;
+
+    // Sending response message
+    sendMessage(id, html, "start");
+  } else {
+    // Creating response message
+    html = `
+        <strong>Я тебя не понимаю</strong>
+        <i>1. Напиши /hwmailing
+        2. Добавь:
+          on - включить рассылку домашки в группу
+          off - выключить рассылку домашки в группу
+          *id группы* - выбрать группу куда отправлять домашку. Чтобы узнать id группы нужно добавить бота туда и написать команду /getchatid</i>`;
+
+    // Sending response message
+    sendMessage(id, html, "start");
+  }
 });
 
 // ALL MESSAGE LISTENER
