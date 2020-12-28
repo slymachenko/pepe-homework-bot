@@ -3,13 +3,7 @@ const TelegramBot = require("node-telegram-bot-api");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 
-const {
-  MondaySubj,
-  TuesdaySubj,
-  WednesdaySubj,
-  ThursdaySubj,
-  FridaySubj,
-} = require("./models/subjectModel");
+const subjectController = require("./controllers/subjectController");
 
 dotenv.config({ path: "./config.env" }); // defining environment variables
 mongoose.connect(process.env.MONGO_URL); // connecting to MongoDB
@@ -19,23 +13,7 @@ const TOKEN = process.env.TOKEN;
 const chatId = process.env.CHAT_ID; // variable needed to define the chat to which next day homework is sent
 
 // Creating homework object with data taken from the database
-let homework = {};
-
-MondaySubj.find((err, msg) => {
-  homework.Monday = msg;
-});
-TuesdaySubj.find((err, msg) => {
-  homework.Tuesday = msg;
-});
-WednesdaySubj.find((err, msg) => {
-  homework.Wednesday = msg;
-});
-ThursdaySubj.find((err, msg) => {
-  homework.Thursday = msg;
-});
-FridaySubj.find((err, msg) => {
-  homework.Friday = msg;
-});
+const homework = subjectController.getHomeworkData();
 
 // let variables
 let html,
@@ -57,227 +35,6 @@ const bot = new TelegramBot(TOKEN, {
 
 console.log("Bot have been started...");
 
-// FUNCTIONS
-
-const giveHomework = (day) => {
-  let data = ``,
-    photos = [], // arr to store all photos of the day
-    photo, // [PHOTO] that is attached to each homework that has a photo
-    groupPhoto = []; // [PHOTO] that is attached to each homework that has a photo and divided into groups
-
-  // Looping over each object to define the one that is divided into groups and additional info object
-  day.forEach((el, index) => {
-    if (day[index - 1] !== undefined && day[index - 1].subject !== el.subject) {
-      groupPhoto = [];
-    }
-
-    // add [PHOTO] at the end of homework that has photo
-    if (el.groups.length === 0) {
-      el.photo ? (photo = "[PHOTO]") : (photo = "");
-    } else if (day[index - 1].subject === el.subject) {
-    } else {
-      el.groups.forEach((group) => {
-        group.photo ? groupPhoto.push("[PHOTO]") : groupPhoto.push("");
-      });
-    }
-
-    // add all photos of the day to photos array
-    if (el.groups.length === 0 && el.photo !== "") {
-      photos.push(el.photo);
-    } else {
-      el.groups.forEach((el) => {
-        if (el.photo !== "") {
-          photos.push(el.photo);
-        }
-      });
-    }
-
-    switch (el.subject) {
-      case "Доп. инфа":
-        // if current element is 'additional info' - add it to data without numbering in the list
-        data += `<strong>${el.subject}:</strong> ${el.text} ${photo}
-    `;
-
-        break;
-      case "Английский":
-        // if current element is English - add it to data with groups as child elements
-
-        if (day[index - 1].subject === el.subject) {
-          groupdataEng = `
-        Н.А: ${day[index - 1].groups[0].text} ${groupPhoto[0]}
-        А.П: ${day[index - 1].groups[1].text} ${groupPhoto[1]}
-        А.Г: ${day[index - 1].groups[2].text} ${groupPhoto[2]}`;
-
-          data += `<strong>${index}.${el.subject}:</strong> ${groupdataEng}
-    `;
-        } else if (day[index + 1].subject === el.subject) {
-          data += `<strong>${index}.${el.subject},</strong>
-    `;
-        } else {
-          groupdataEng = `
-        Н.А: ${el.groups[0].text} ${groupPhoto[0]}
-        А.П: ${el.groups[1].text} ${groupPhoto[1]}
-        А.Г: ${el.groups[2].text} ${groupPhoto[2]}`;
-
-          data += `<strong>${index}.${el.subject}:</strong> ${groupdataEng}
-    `;
-        }
-        break;
-      case "Испанский":
-        // if current element is Spanish - add it to data with groups as child elements
-
-        groupdataEsp = `
-        Л.В: ${el.groups[0].text} ${groupPhoto[0]}
-        С.Л: ${el.groups[1].text} ${groupPhoto[1]}`;
-
-        data += `<strong>${index}.${el.subject}:</strong> ${groupdataEsp}
-    `;
-        break;
-      case "Украинский":
-        // if current element is Ukrainian - add it to data with groups as child elements
-        if (day[index - 1].subject === el.subject) {
-          groupdataUkr = `
-        А.В: ${day[index - 1].groups[0].text} ${groupPhoto[0]} 
-        Л.А: ${day[index - 1].groups[1].text} ${groupPhoto[1]}`;
-
-          data += `<strong>${index}.${el.subject}:</strong> ${groupdataUkr}
-    `;
-        } else {
-          data += `<strong>${index}.${el.subject},</strong>
-    `;
-        }
-        break;
-      case "-":
-        break;
-      default:
-        // if current element isn't additional info or one with groups - add it to data
-        data += `<strong>${index}.${el.subject}:</strong> ${el.text} ${photo}
-    `;
-    }
-  });
-  return [data, photos];
-};
-
-const resetUserId = (userID) => {
-  usersType.give.forEach((el, i) => {
-    if (el === userID) {
-      usersType.give.splice(i, 1);
-    }
-  });
-  usersType.add.forEach((el, i) => {
-    if (el === userID) {
-      usersType.add.splice(i, 1);
-    }
-  });
-};
-
-const sendMessage = (id, html, type, day) => {
-  switch (type) {
-    case "start":
-      // Sending response message
-      bot.sendMessage(id, html, {
-        parse_mode: "HTML",
-        disable_notification: true,
-        reply_markup: {
-          keyboard: [["Запиши", "Напиши"]],
-        },
-      });
-      break;
-    case "days":
-      // Sending response message
-      bot.sendMessage(id, html, {
-        parse_mode: "HTML",
-        disable_notification: true,
-        reply_markup: {
-          keyboard: [
-            ["Понедельник", "Вторник", "Среда"],
-            ["Четверг", "Пятница"],
-            ["Назад"],
-          ],
-        },
-      });
-      break;
-    case "subjects":
-      // Creating response message
-      html = `
-      <strong>Какой предмет хочешь запиcать?</strong>`;
-
-      // Sending response message
-      bot.sendMessage(id, html, {
-        parse_mode: "HTML",
-        disable_notification: true,
-        reply_markup: {
-          keyboard: [
-            [day[1].subject, day[2].subject, day[3].subject],
-            [day[4].subject, day[5].subject, day[6].subject],
-            [day[7].subject, day[8].subject],
-            [day[0].subject, "Назад"],
-          ],
-        },
-      });
-      break;
-    case "done":
-      // Creating response message
-      html = `
-      <strong>Скидывай текст или/и фото с домашкой</strong>
-      <i>Я запишу её как домашка по предмету ${subj.subject}</i>
-      `;
-
-      // Sending response message
-      bot.sendMessage(id, html, {
-        parse_mode: "HTML",
-        disable_notification: true,
-        reply_markup: {
-          keyboard: [["Готово", "Очистить"]],
-        },
-      });
-      break;
-    case "teachers-2":
-      // Creating response message
-      html = `В какой ты группе?`;
-
-      // Sending response message
-      bot.sendMessage(id, html, {
-        parse_mode: "HTML",
-        disable_notification: true,
-        reply_markup: {
-          keyboard: [
-            [subj.groups[0].teacher, subj.groups[1].teacher],
-            ["Назад"],
-          ],
-        },
-      });
-      break;
-    case "teachers-3":
-      // Creating response message
-      html = `В какой ты группе?`;
-
-      // Sending response message
-      bot.sendMessage(id, html, {
-        parse_mode: "HTML",
-        disable_notification: true,
-        reply_markup: {
-          keyboard: [
-            [
-              subj.groups[0].teacher,
-              subj.groups[1].teacher,
-              subj.groups[2].teacher,
-            ],
-            ["Назад"],
-          ],
-        },
-      });
-      break;
-    case "none":
-      // Sending response message
-      bot.sendMessage(id, html, {
-        parse_mode: "HTML",
-        disable_notification: true,
-      });
-      break;
-  }
-};
-
 // COMMAND LISTENERS
 
 bot.onText(/^\/start$/, (msg) => {
@@ -294,7 +51,7 @@ bot.onText(/^\/start$/, (msg) => {
   <pre>Сюда я буду кидать домашку на завтра, а если хочешь узнать или записать что-то - жду тебя в личных сообщениях</pre>`;
 
     // Sending response message
-    sendMessage(id, html, "none");
+    subjectController.sendMessage(bot, id, html, "none");
     return;
   }
 
@@ -303,17 +60,16 @@ bot.onText(/^\/start$/, (msg) => {
   <pre>Выбери что тебе нужно: Чтобы я записал или написал домашку</pre>`;
 
   // Sending response message
-  sendMessage(id, html, "start");
+  subjectController.sendMessage(bot, id, html, "start");
 });
 
-// Sends id of the chat with '/getchatid' command
-// bot.onText(/\/getchatid/, (msg) => {
-//   const { id } = msg.chat;
-//   // Creating response message
-//   html = `<strong>ID of the Chat => ${msg.chat.id}</strong>`;
-//   // Sending response message
-//   sendMessage(id, html, 'none');
-// });
+bot.onText(/\/getchatid/, (msg) => {
+  const { id } = msg.chat;
+  // Creating response message
+  html = `<strong>ID of the Chat => ${msg.chat.id}</strong>`;
+  // Sending response message
+  subjectController.sendMessage(bot, id, html, "none");
+});
 
 bot.onText(/^Напиши$/, (msg) => {
   const { id } = msg.chat;
@@ -332,7 +88,7 @@ bot.onText(/^Напиши$/, (msg) => {
     <i>За какой день скинуть дз?</i>`;
 
   // Sending response message
-  sendMessage(id, html, "days");
+  subjectController.sendMessage(bot, id, html, "days");
 });
 
 bot.onText(/^Запиши$/, (msg) => {
@@ -352,7 +108,7 @@ bot.onText(/^Запиши$/, (msg) => {
       <i>На когда записать дз?</i>`;
 
   // Sending response message
-  sendMessage(id, html, "days");
+  subjectController.sendMessage(bot, id, html, "days");
 });
 
 bot.onText(/^Назад$/, (msg) => {
@@ -363,7 +119,7 @@ bot.onText(/^Назад$/, (msg) => {
     return;
   }
 
-  resetUserId(msg.from.id);
+  subjectController.resetUserId(usersType, msg.from.id);
 
   // Creating response message
   html = `
@@ -371,7 +127,7 @@ bot.onText(/^Назад$/, (msg) => {
         <i>Что мне сделать?</i>`;
 
   // Sending response message
-  sendMessage(id, html, "start");
+  subjectController.sendMessage(bot, id, html, "start");
 });
 
 // ALL MESSAGE LISTENER
@@ -400,19 +156,19 @@ bot.on("message", async (msg) => {
     if (type === "give") {
       switch (msg.text) {
         case "Понедельник":
-          homeworkData = giveHomework(homework.Monday);
+          homeworkData = subjectController.giveHomework(homework.Monday);
           break;
         case "Вторник":
-          homeworkData = giveHomework(homework.Tuesday);
+          homeworkData = subjectController.giveHomework(homework.Tuesday);
           break;
         case "Среда":
-          homeworkData = giveHomework(homework.Wednesday);
+          homeworkData = subjectController.giveHomework(homework.Wednesday);
           break;
         case "Четверг":
-          homeworkData = giveHomework(homework.Thursday);
+          homeworkData = subjectController.giveHomework(homework.Thursday);
           break;
         case "Пятница":
-          homeworkData = giveHomework(homework.Friday);
+          homeworkData = subjectController.giveHomework(homework.Friday);
           break;
         default:
           return;
@@ -424,7 +180,7 @@ bot.on("message", async (msg) => {
     <i>${homeworkData[0]}</i>`;
 
       // Sending response message
-      sendMessage(id, html, "days");
+      subjectController.sendMessage(bot, id, html, "days");
 
       if (homeworkData[1].length !== 0) {
         homeworkData[1].forEach((el) => {
@@ -464,7 +220,7 @@ bot.on("message", async (msg) => {
 
       if (isDay) {
         // Creating and Sending response message
-        sendMessage(id, html, "subjects", day);
+        subjectController.sendMessage(bot, id, html, "subjects", { day });
       }
 
       if (day) {
@@ -482,19 +238,34 @@ bot.on("message", async (msg) => {
       if (subj) {
         switch (day) {
           case homework.Monday:
-            cursubj = await MondaySubj.findOne({ subject: subj.subject });
+            cursubj = await subjectController.findSubject(
+              "Monday",
+              subj.subject
+            );
             break;
           case homework.Tuesday:
-            cursubj = await TuesdaySubj.findOne({ subject: subj.subject });
+            cursubj = await subjectController.findSubject(
+              "Tuesday",
+              subj.subject
+            );
             break;
           case homework.Wednesday:
-            cursubj = await WednesdaySubj.findOne({ subject: subj.subject });
+            cursubj = await subjectController.findSubject(
+              "Wednesday",
+              subj.subject
+            );
             break;
           case homework.Thursday:
-            cursubj = await ThursdaySubj.findOne({ subject: subj.subject });
+            cursubj = await subjectController.findSubject(
+              "Thursday",
+              subj.subject
+            );
             break;
           case homework.Friday:
-            cursubj = await FridaySubj.findOne({ subject: subj.subject });
+            cursubj = await subjectController.findSubject(
+              "Friday",
+              subj.subject
+            );
             break;
           case "Назад":
             return;
@@ -502,17 +273,17 @@ bot.on("message", async (msg) => {
       }
 
       if (msg.text === "Готово") {
-        resetUserId(msg.from.id);
+        subjectController.resetUserId(usersType, msg.from.id);
 
         // Creating response message
         html = `<strong> Что мне сделать? </strong>`;
 
         // Sending response message
-        sendMessage(id, html, "start");
+        subjectController.sendMessage(bot, id, html, "start");
 
         subj = undefined;
       } else if (msg.text === "Очистить") {
-        resetUserId(msg.from.id);
+        subjectController.resetUserId(usersType, msg.from.id);
 
         // Clear subj and cursubj
         if (subj.groups.length === 0) {
@@ -539,7 +310,7 @@ bot.on("message", async (msg) => {
         html = `<strong> Что мне сделать? </strong>`;
 
         // Sending response message
-        sendMessage(id, html, "start");
+        subjectController.sendMessage(bot, id, html, "start");
 
         subj = undefined;
       } else if (subj === undefined) {
@@ -551,7 +322,9 @@ bot.on("message", async (msg) => {
               group = undefined;
 
               // Creating and Sending response message
-              sendMessage(id, html, "teachers-3");
+              subjectController.sendMessage(bot, id, html, "teachers-3", {
+                subj,
+              });
             }
             break;
           case "Испанский":
@@ -560,14 +333,16 @@ bot.on("message", async (msg) => {
               group = undefined;
 
               // Creating and Sending response message
-              sendMessage(id, html, "teachers-2");
+              subjectController.sendMessage(bot, id, html, "teachers-2", {
+                subj,
+              });
             }
         }
 
         subj.groups.forEach((el) => {
           if (msg.text === el.teacher) {
             // Sending response message
-            sendMessage(id, html, "done");
+            subjectController.sendMessage(bot, id, html, "done", { subj });
 
             switch (msg.text) {
               case subj.groups[0].teacher:
@@ -606,7 +381,7 @@ bot.on("message", async (msg) => {
         }
       } else if (msg.text === subj.subject) {
         // Creating and Sending response message
-        sendMessage(id, html, "done");
+        subjectController.sendMessage(bot, id, html, "done", { subj });
       } else {
         if (msg.text !== undefined) {
           // update data
@@ -641,19 +416,19 @@ setInterval(() => {
   ) {
     switch (date.getDay()) {
       case 0:
-        data = giveHomework(homework.Monday);
+        data = subjectController.giveHomework(homework.Monday);
         break;
       case 1:
-        data = giveHomework(homework.Tuesday);
+        data = subjectController.giveHomework(homework.Tuesday);
         break;
       case 2:
-        data = giveHomework(homework.Wednesday);
+        data = subjectController.giveHomework(homework.Wednesday);
         break;
       case 3:
-        data = giveHomework(homework.Thursday);
+        data = subjectController.giveHomework(homework.Thursday);
         break;
       case 4:
-        data = giveHomework(homework.Friday);
+        data = subjectController.giveHomework(homework.Friday);
         break;
     }
     // Creating response message
@@ -663,7 +438,7 @@ setInterval(() => {
             `;
 
     // Sending response message
-    sendMessage(id, html, "none");
+    subjectController.sendMessage(bot, id, html, "none");
 
     if (data[1].length !== 0) {
       data[1].forEach((el) => {

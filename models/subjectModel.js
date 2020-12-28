@@ -23,8 +23,18 @@ const subjSchema = new mongoose.Schema({
   ],
 });
 
-exports.MondaySubj = mongoose.model("Subject", subjSchema, "Monday");
-exports.TuesdaySubj = mongoose.model("Subject", subjSchema, "Tuesday");
-exports.WednesdaySubj = mongoose.model("Subject", subjSchema, "Wednesday");
-exports.ThursdaySubj = mongoose.model("Subject", subjSchema, "Thursday");
-exports.FridaySubj = mongoose.model("Subject", subjSchema, "Friday");
+// Creating homework object with data taken from the database
+let MondaySubj = mongoose.model("Subject", subjSchema, "Monday"),
+  TuesdaySubj = mongoose.model("Subject", subjSchema, "Tuesday"),
+  WednesdaySubj = mongoose.model("Subject", subjSchema, "Wednesday"),
+  ThursdaySubj = mongoose.model("Subject", subjSchema, "Thursday"),
+  FridaySubj = mongoose.model("Subject", subjSchema, "Friday");
+
+// Exporting homework models for updating homework
+module.exports = {
+  MondaySubj,
+  TuesdaySubj,
+  WednesdaySubj,
+  ThursdaySubj,
+  FridaySubj,
+};
