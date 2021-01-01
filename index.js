@@ -11,6 +11,7 @@ mongoose.connect(process.env.MONGO_URL); // connecting to MongoDB
 // constant variables
 const TOKEN = process.env.TOKEN;
 const chatId = process.env.CHAT_ID; // variable needed to define the chat to which next day homework is sent
+const pass = process.env.USER_PASSWORD;
 
 // Creating homework object with data taken from the database
 const homework = subjectController.getHomeworkData();
@@ -37,8 +38,20 @@ console.log("Bot have been started...");
 
 // COMMAND LISTENERS
 
-bot.onText(/^\/start$/, (msg) => {
+bot.onText(new RegExp(pass), (msg) => {
   const { id } = msg.chat;
+
+  subjectController.addLoggedUser(msg.from.id);
+  html = `${msg.from.first_name}, вы зарегистрировались`;
+  subjectController.sendMessage(bot, id, html, "none");
+});
+
+bot.onText(/^\/start$/, async (msg) => {
+  const { id } = msg.chat;
+
+  if (!(await subjectController.checkLoggedUser(msg.from.id))) {
+    return;
+  }
 
   // Creating response message
   html = `
@@ -63,19 +76,28 @@ bot.onText(/^\/start$/, (msg) => {
   subjectController.sendMessage(bot, id, html, "start");
 });
 
-bot.onText(/\/getchatid/, (msg) => {
+bot.onText(/\/getchatid/, async (msg) => {
   const { id } = msg.chat;
+
+  if (!(await subjectController.checkLoggedUser(msg.from.id))) {
+    return;
+  }
+
   // Creating response message
   html = `<strong>ID of the Chat => ${msg.chat.id}</strong>`;
   // Sending response message
   subjectController.sendMessage(bot, id, html, "none");
 });
 
-bot.onText(/^Напиши$/, (msg) => {
+bot.onText(/^Напиши$/, async (msg) => {
   const { id } = msg.chat;
 
   // Ignore any chat message
   if (msg.chat.id !== msg.from.id) {
+    return;
+  }
+
+  if (!(await subjectController.checkLoggedUser(msg.from.id))) {
     return;
   }
 
@@ -91,11 +113,15 @@ bot.onText(/^Напиши$/, (msg) => {
   subjectController.sendMessage(bot, id, html, "days");
 });
 
-bot.onText(/^Запиши$/, (msg) => {
+bot.onText(/^Запиши$/, async (msg) => {
   const { id } = msg.chat;
 
   // Ignore any chat message
   if (msg.chat.id !== msg.from.id) {
+    return;
+  }
+
+  if (!(await subjectController.checkLoggedUser(msg.from.id))) {
     return;
   }
 
@@ -111,11 +137,15 @@ bot.onText(/^Запиши$/, (msg) => {
   subjectController.sendMessage(bot, id, html, "days");
 });
 
-bot.onText(/^Назад$/, (msg) => {
+bot.onText(/^Назад$/, async (msg) => {
   const { id } = msg.chat;
 
   // Ignore any chat message
   if (msg.chat.id !== msg.from.id) {
+    return;
+  }
+
+  if (!(await subjectController.checkLoggedUser(msg.from.id))) {
     return;
   }
 
@@ -138,6 +168,16 @@ bot.on("message", async (msg) => {
 
     // Ignore any chat message
     if (msg.chat.id !== msg.from.id) {
+      return;
+    }
+
+    if (
+      !(await subjectController.checkLoggedUser(msg.from.id)) &&
+      msg.text !== pass
+    ) {
+      html = `<strong>${msg.from.first_name}, ВВЕДИТЕ ПАРОЛЬ</strong>
+      Узнать пароль можно у моего создателя <pre>@senya_s408</pre>`;
+      subjectController.sendMessage(bot, id, html, "none");
       return;
     }
 

@@ -1,11 +1,14 @@
 const {
-  homework,
   MondaySubj,
   TuesdaySubj,
   WednesdaySubj,
   ThursdaySubj,
   FridaySubj,
 } = require("./../models/subjectModel");
+
+let loggedUsersVar;
+
+const loggedUsers = require("./../models/passModel");
 
 exports.giveHomework = (day) => {
   let data = ``,
@@ -268,4 +271,51 @@ exports.getHomeworkData = () => {
   });
 
   return homework;
+};
+
+exports.checkLoggedUser = async (user_id) => {
+  try {
+    loggedUsersVar = await loggedUsers.findOne({
+      _id: "5fef8ccf82a7bc607cd66d49",
+    });
+    return loggedUsersVar.loggedUsers.includes(user_id);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+exports.deleteLoggedUser = async (user_id) => {
+  try {
+    loggedUsersVar = await loggedUsers.findOne({
+      _id: "5fef8ccf82a7bc607cd66d49",
+    });
+    if (loggedUsersVar.loggedUsers.includes(user_id)) {
+      loggedUsersVar.loggedUsers.forEach((el, i) => {
+        if (el === user_id) {
+          loggedUsersVar.loggedUsers.splice(i, 1);
+          loggedUsersVar.save();
+        }
+      });
+    } else {
+      console.log("Requested user is not in the array");
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+exports.addLoggedUser = async (user_id) => {
+  try {
+    loggedUsersVar = await loggedUsers.findOne({
+      _id: "5fef8ccf82a7bc607cd66d49",
+    });
+    if (!loggedUsersVar.loggedUsers.includes(user_id)) {
+      loggedUsersVar.loggedUsers.push(user_id);
+      loggedUsersVar.save();
+    } else {
+      console.log("This user is already logged in");
+    }
+  } catch (err) {
+    console.error(err);
+  }
 };
