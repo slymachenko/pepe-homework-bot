@@ -217,7 +217,7 @@ bot.on("message", async (msg) => {
       // Creating response message
       html = `
       <strong>Домашка:</strong>
-    <i>${homeworkData[0]}</i>`;
+      <i>${homeworkData[0]}</i>`;
 
       // Sending response message
       subjectController.sendMessage(bot, id, html, "days");
