@@ -252,6 +252,86 @@ exports.findSubject = (doc, subject) => {
   }
 };
 
+exports.resetSubjects = (doc) => {
+  switch (doc) {
+    case "Monday":
+      MondaySubj.find((err, msg) => {
+        msg.forEach(async (el) => {
+          if (el.groups.length !== 0) {
+            el.groups.forEach((el) => {
+              el.text = "";
+              el.photo = "";
+            });
+          } else {
+            el.text = "";
+            el.photo = "";
+          }
+          await el.save();
+        });
+      });
+    case "Tuesday":
+      TuesdaySubj.find((err, msg) => {
+        msg.forEach(async (el) => {
+          if (el.groups.length !== 0) {
+            el.groups.forEach((el) => {
+              el.text = "";
+              el.photo = "";
+            });
+          } else {
+            el.text = "";
+            el.photo = "";
+          }
+          await el.save();
+        });
+      });
+    case "Wednesday":
+      WednesdaySubj.find((err, msg) => {
+        msg.forEach(async (el) => {
+          if (el.groups.length !== 0) {
+            el.groups.forEach((el) => {
+              el.text = "";
+              el.photo = "";
+            });
+          } else {
+            el.text = "";
+            el.photo = "";
+          }
+          await el.save();
+        });
+      });
+    case "Thursday":
+      ThursdaySubj.find((err, msg) => {
+        msg.forEach(async (el) => {
+          if (el.groups.length !== 0) {
+            el.groups.forEach((el) => {
+              el.text = "";
+              el.photo = "";
+            });
+          } else {
+            el.text = "";
+            el.photo = "";
+          }
+          await el.save();
+        });
+      });
+    case "Friday":
+      FridaySubj.find((err, msg) => {
+        msg.forEach(async (el) => {
+          if (el.groups.length !== 0) {
+            el.groups.forEach((el) => {
+              el.text = "";
+              el.photo = "";
+            });
+          } else {
+            el.text = "";
+            el.photo = "";
+          }
+          await el.save();
+        });
+      });
+  }
+};
+
 exports.getHomeworkData = () => {
   let homework = {};
   MondaySubj.find((err, msg) => {

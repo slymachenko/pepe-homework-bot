@@ -490,7 +490,32 @@ setInterval(() => {
       });
     }
   }
-}, 59000);
+
+  if (
+    date.getHours() === 22 &&
+    date.getMinutes() === 59 &&
+    date.getDay() !== 6 &&
+    date.getDay() !== 0
+  ) {
+    switch (date.getDay()) {
+      case 1:
+        subjectController.resetSubjects("Monday");
+        break;
+      case 2:
+        subjectController.resetSubjects("Tuesday");
+        break;
+      case 3:
+        subjectController.resetSubjects("Wednesday");
+        break;
+      case 4:
+        subjectController.resetSubjects("Thursday");
+        break;
+      case 5:
+        subjectController.resetSubjects("Friday");
+        break;
+    }
+  }
+}, 58000);
 
 bot.on("polling_error", (err) => console.log(err));
 
