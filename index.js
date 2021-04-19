@@ -1,29 +1,25 @@
-// 3-rd party Moduels
 const TelegramBot = require("node-telegram-bot-api");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 
 const subjectController = require("./controllers/subjectController");
 
-dotenv.config({ path: "./config.env" }); // defining environment variables
-mongoose.connect(process.env.MONGO_URL); // connecting to MongoDB
+mongoose.connect(process.env.MONGO_URL);
 
-// constant variables
+dotenv.config({ path: "./config.env" });
 const TOKEN = process.env.TOKEN;
-const chatId = process.env.CHAT_ID; // variable needed to define the chat to which next day homework is sent
+const chatId = process.env.CHAT_ID; // define the chat to which next day homework is sent
 const pass = process.env.USER_PASSWORD;
 
 // Creating homework object with data taken from the database
 const homework = subjectController.getHomeworkData();
 
-// let variables
-let html,
-  day,
-  subj,
-  teacher,
-  usersType = { give: [], add: [] };
+let response;
+let day;
+let subj;
+let teacher;
+let usersType = { give: [], add: [] };
 
-// Create a bot variable - an instance of the TelegramBot class
 const bot = new TelegramBot(TOKEN, {
   polling: {
     interval: 300,
@@ -42,8 +38,8 @@ bot.onText(new RegExp(pass), (msg) => {
   const { id } = msg.chat;
 
   subjectController.addLoggedUser(msg.from.id);
-  html = `${msg.from.first_name}, вы зарегистрировались`;
-  subjectController.sendMessage(bot, id, html, "none");
+  response = `${msg.from.first_name}, вы зарегистрировались`;
+  subjectController.sendMessage(bot, id, response, "none");
 });
 
 bot.onText(/^\/start$/, async (msg) => {
@@ -53,27 +49,22 @@ bot.onText(/^\/start$/, async (msg) => {
     return;
   }
 
-  // Creating response message
-  html = `
+  response = `
   <strong>Привет, ${msg.from.first_name}!</strong>
   <i>Меня зовут лягушонок ПЕПЕ и я нужен для того чтобы помочь разобраться с этой глупой домашкой!</i>`;
 
   if (msg.chat.id !== msg.from.id) {
-    // Creating response message
-    html += `
+    response += `
   <pre>Сюда я буду кидать домашку на завтра, а если хочешь узнать или записать что-то - жду тебя в личных сообщениях</pre>`;
 
-    // Sending response message
-    subjectController.sendMessage(bot, id, html, "none");
+    subjectController.sendMessage(bot, id, response, "none");
     return;
   }
 
-  // Creating response message
-  html += `
+  response += `
   <pre>Выбери что тебе нужно: Чтобы я записал или написал домашку</pre>`;
 
-  // Sending response message
-  subjectController.sendMessage(bot, id, html, "start");
+  subjectController.sendMessage(bot, id, response, "start");
 });
 
 bot.onText(/\/getchatid/, async (msg) => {
@@ -83,10 +74,9 @@ bot.onText(/\/getchatid/, async (msg) => {
     return;
   }
 
-  // Creating response message
-  html = `<strong>ID of the Chat => ${msg.chat.id}</strong>`;
-  // Sending response message
-  subjectController.sendMessage(bot, id, html, "none");
+  response = `<strong>ID of the Chat => ${msg.chat.id}</strong>`;
+
+  subjectController.sendMessage(bot, id, response, "none");
 });
 
 bot.onText(/^Напиши$/, async (msg) => {
@@ -104,13 +94,11 @@ bot.onText(/^Напиши$/, async (msg) => {
   // Set user id to give type
   usersType.give.push(msg.from.id);
 
-  // Creating response message
-  html = `
+  response = `
     <strong>${msg.from.first_name},</strong>
     <i>За какой день скинуть дз?</i>`;
 
-  // Sending response message
-  subjectController.sendMessage(bot, id, html, "days");
+  subjectController.sendMessage(bot, id, response, "days");
 });
 
 bot.onText(/^Запиши$/, async (msg) => {
@@ -128,13 +116,11 @@ bot.onText(/^Запиши$/, async (msg) => {
   // Set user id to add type
   usersType.add.push(msg.from.id);
 
-  // Creating response message
-  html = `
+  response = `
       <strong>${msg.from.first_name},</strong>
       <i>На когда записать дз?</i>`;
 
-  // Sending response message
-  subjectController.sendMessage(bot, id, html, "days");
+  subjectController.sendMessage(bot, id, response, "days");
 });
 
 bot.onText(/^Назад$/, async (msg) => {
@@ -151,13 +137,11 @@ bot.onText(/^Назад$/, async (msg) => {
 
   subjectController.resetUserId(usersType, msg.from.id);
 
-  // Creating response message
-  html = `
+  response = `
         <strong>${msg.from.first_name},</strong>
         <i>Что мне сделать?</i>`;
 
-  // Sending response message
-  subjectController.sendMessage(bot, id, html, "start");
+  subjectController.sendMessage(bot, id, response, "start");
 });
 
 // ALL MESSAGE LISTENER
@@ -175,9 +159,9 @@ bot.on("message", async (msg) => {
       !(await subjectController.checkLoggedUser(msg.from.id)) &&
       msg.text !== pass
     ) {
-      html = `<strong>${msg.from.first_name}, ВВЕДИТЕ ПАРОЛЬ</strong>
+      response = `<strong>${msg.from.first_name}, ВВЕДИТЕ ПАРОЛЬ</strong>
       Узнать пароль можно у моего создателя <pre>@senya_s408</pre>`;
-      subjectController.sendMessage(bot, id, html, "none");
+      subjectController.sendMessage(bot, id, response, "none");
       return;
     }
 
@@ -214,19 +198,17 @@ bot.on("message", async (msg) => {
           return;
       }
 
-      // Creating response message
-      html = `
+      response = `
       <strong>Домашка:</strong>
       <i>${homeworkData[0]}</i>`;
 
-      // Sending response message
-      subjectController.sendMessage(bot, id, html, "days");
+      subjectController.sendMessage(bot, id, response, "days");
 
       if (homeworkData[1].length !== 0) {
         homeworkData[1].forEach((el) => {
           // Sending photos
           bot.sendPhoto(id, el, {
-            parse_mode: "HTML",
+            parse_mode: "response",
             disable_notification: true,
           });
         });
@@ -259,8 +241,7 @@ bot.on("message", async (msg) => {
       }
 
       if (isDay) {
-        // Creating and Sending response message
-        subjectController.sendMessage(bot, id, html, "subjects", { day });
+        subjectController.sendMessage(bot, id, response, "subjects", { day });
       }
 
       if (day) {
@@ -315,11 +296,9 @@ bot.on("message", async (msg) => {
       if (msg.text === "Готово") {
         subjectController.resetUserId(usersType, msg.from.id);
 
-        // Creating response message
-        html = `<strong> Что мне сделать? </strong>`;
+        response = `<strong> Что мне сделать? </strong>`;
 
-        // Sending response message
-        subjectController.sendMessage(bot, id, html, "start");
+        subjectController.sendMessage(bot, id, response, "start");
 
         subj = undefined;
       } else if (msg.text === "Очистить") {
@@ -346,11 +325,9 @@ bot.on("message", async (msg) => {
 
         await cursubj.save();
 
-        // Creating response message
-        html = `<strong> Что мне сделать? </strong>`;
+        response = `<strong> Что мне сделать? </strong>`;
 
-        // Sending response message
-        subjectController.sendMessage(bot, id, html, "start");
+        subjectController.sendMessage(bot, id, response, "start");
 
         subj = undefined;
       } else if (subj === undefined) {
@@ -361,8 +338,7 @@ bot.on("message", async (msg) => {
             if (msg.text === subj.subject) {
               group = undefined;
 
-              // Creating and Sending response message
-              subjectController.sendMessage(bot, id, html, "teachers-3", {
+              subjectController.sendMessage(bot, id, response, "teachers-3", {
                 subj,
               });
             }
@@ -372,8 +348,7 @@ bot.on("message", async (msg) => {
             if (msg.text === subj.subject) {
               group = undefined;
 
-              // Creating and Sending response message
-              subjectController.sendMessage(bot, id, html, "teachers-2", {
+              subjectController.sendMessage(bot, id, response, "teachers-2", {
                 subj,
               });
             }
@@ -381,8 +356,7 @@ bot.on("message", async (msg) => {
 
         subj.groups.forEach((el) => {
           if (msg.text === el.teacher) {
-            // Sending response message
-            subjectController.sendMessage(bot, id, html, "done", { subj });
+            subjectController.sendMessage(bot, id, response, "done", { subj });
 
             switch (msg.text) {
               case subj.groups[0].teacher:
@@ -416,23 +390,20 @@ bot.on("message", async (msg) => {
             subj.groups[group].photo = msg.photo[2].file_id;
             cursubj.groups[group].photo = msg.photo[2].file_id;
           }
-          // Saving data to DB
+
           await cursubj.save();
         }
       } else if (msg.text === subj.subject) {
-        // Creating and Sending response message
-        subjectController.sendMessage(bot, id, html, "done", { subj });
+        subjectController.sendMessage(bot, id, response, "done", { subj });
       } else {
         if (msg.text !== undefined) {
-          // update data
           subj.text = msg.text;
           cursubj.text = msg.text;
         } else {
-          // update data
           subj.photo = msg.photo[2].file_id;
           cursubj.photo = msg.photo[2].file_id;
         }
-        // Saving data to DB
+
         await cursubj.save();
       }
     }
@@ -471,20 +442,19 @@ setInterval(() => {
         data = subjectController.giveHomework(homework.Friday);
         break;
     }
-    // Creating response message
-    const html = `
+
+    const response = `
             <strong>Домашка на завтра:</strong>
       <i>${data[0]}</i>
             `;
 
-    // Sending response message
-    subjectController.sendMessage(bot, id, html, "none");
+    subjectController.sendMessage(bot, id, response, "none");
 
     if (data[1].length !== 0) {
       data[1].forEach((el) => {
         // Sending photos
         bot.sendPhoto(chatId, el, {
-          parse_mode: "HTML",
+          parse_mode: "response",
           disable_notification: true,
         });
       });
