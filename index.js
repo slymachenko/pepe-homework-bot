@@ -4,20 +4,16 @@ const mongoose = require("mongoose");
 
 const subjectController = require("./controllers/subjectController");
 
+dotenv.config({ path: "./config.env" });
 mongoose.connect(process.env.MONGO_URL);
 
-dotenv.config({ path: "./config.env" });
 const TOKEN = process.env.TOKEN;
 const chatId = process.env.CHAT_ID; // define the chat to which next day homework is sent
 const pass = process.env.USER_PASSWORD;
 
-// Creating homework object with data taken from the database
+// Creating homework object with data taken from DB
 const homework = subjectController.getHomeworkData();
 
-let response;
-let day;
-let subj;
-let teacher;
 let usersType = { give: [], add: [] };
 
 const bot = new TelegramBot(TOKEN, {
@@ -36,6 +32,7 @@ console.log("Bot have been started...");
 
 bot.onText(new RegExp(pass), (msg) => {
   const { id } = msg.chat;
+  let response;
 
   subjectController.addLoggedUser(msg.from.id);
   response = `${msg.from.first_name}, вы зарегистрировались`;
@@ -44,8 +41,9 @@ bot.onText(new RegExp(pass), (msg) => {
 
 bot.onText(/^\/start$/, async (msg) => {
   const { id } = msg.chat;
+  let response;
 
-  if (!(await subjectController.checkLoggedUser(msg.from.id))) {
+  if (!(await subjectController.isUserLoggedIn(msg.from.id))) {
     return;
   }
 
@@ -69,8 +67,9 @@ bot.onText(/^\/start$/, async (msg) => {
 
 bot.onText(/\/getchatid/, async (msg) => {
   const { id } = msg.chat;
+  let response;
 
-  if (!(await subjectController.checkLoggedUser(msg.from.id))) {
+  if (!(await subjectController.isUserLoggedIn(msg.from.id))) {
     return;
   }
 
@@ -81,17 +80,16 @@ bot.onText(/\/getchatid/, async (msg) => {
 
 bot.onText(/^Напиши$/, async (msg) => {
   const { id } = msg.chat;
+  let response;
 
-  // Ignore any chat message
   if (msg.chat.id !== msg.from.id) {
     return;
   }
 
-  if (!(await subjectController.checkLoggedUser(msg.from.id))) {
+  if (!(await subjectController.isUserLoggedIn(msg.from.id))) {
     return;
   }
 
-  // Set user id to give type
   usersType.give.push(msg.from.id);
 
   response = `
@@ -103,13 +101,13 @@ bot.onText(/^Напиши$/, async (msg) => {
 
 bot.onText(/^Запиши$/, async (msg) => {
   const { id } = msg.chat;
+  let response;
 
-  // Ignore any chat message
   if (msg.chat.id !== msg.from.id) {
     return;
   }
 
-  if (!(await subjectController.checkLoggedUser(msg.from.id))) {
+  if (!(await subjectController.isUserLoggedIn(msg.from.id))) {
     return;
   }
 
@@ -125,13 +123,13 @@ bot.onText(/^Запиши$/, async (msg) => {
 
 bot.onText(/^Назад$/, async (msg) => {
   const { id } = msg.chat;
+  let response;
 
-  // Ignore any chat message
   if (msg.chat.id !== msg.from.id) {
     return;
   }
 
-  if (!(await subjectController.checkLoggedUser(msg.from.id))) {
+  if (!(await subjectController.isUserLoggedIn(msg.from.id))) {
     return;
   }
 
@@ -145,18 +143,20 @@ bot.onText(/^Назад$/, async (msg) => {
 });
 
 // ALL MESSAGE LISTENER
+
 bot.on("message", async (msg) => {
   try {
     const { id } = msg.chat;
-    let homeworkData, type;
+    let response;
+    let homeworkData;
+    let type;
 
-    // Ignore any chat message
     if (msg.chat.id !== msg.from.id) {
       return;
     }
 
     if (
-      !(await subjectController.checkLoggedUser(msg.from.id)) &&
+      !(await subjectController.isUserLoggedIn(msg.from.id)) &&
       msg.text !== pass
     ) {
       response = `<strong>${msg.from.first_name}, ВВЕДИТЕ ПАРОЛЬ</strong>
@@ -206,17 +206,15 @@ bot.on("message", async (msg) => {
 
       if (homeworkData[1].length !== 0) {
         homeworkData[1].forEach((el) => {
-          // Sending photos
-          bot.sendPhoto(id, el, {
-            parse_mode: "response",
-            disable_notification: true,
-          });
+          bot.sendPhoto(id, el);
         });
       }
     } else if (type === "add") {
-      const { id } = msg.chat;
-      let isDay = true,
-        cursubj;
+      let isDay = true;
+      let cursubj;
+      let teacher;
+      let subj;
+      let day;
 
       switch (msg.text) {
         case "Понедельник":
@@ -304,7 +302,6 @@ bot.on("message", async (msg) => {
       } else if (msg.text === "Очистить") {
         subjectController.resetUserId(usersType, msg.from.id);
 
-        // Clear subj and cursubj
         if (subj.groups.length === 0) {
           // case this subject without groups
           subj.text = "";
@@ -414,11 +411,9 @@ bot.on("message", async (msg) => {
 
 // Interval that sends data every day in 18:00
 setInterval(() => {
-  // Saving current Date to date variable
   const date = new Date();
   let data;
 
-  // Checking whether current date match needed date
   if (
     date.getHours() === 15 &&
     date.getMinutes() === 00 &&
@@ -453,10 +448,7 @@ setInterval(() => {
     if (data[1].length !== 0) {
       data[1].forEach((el) => {
         // Sending photos
-        bot.sendPhoto(chatId, el, {
-          parse_mode: "response",
-          disable_notification: true,
-        });
+        bot.sendPhoto(chatId, el);
       });
     }
   }

@@ -6,9 +6,9 @@ const {
   FridaySubj,
 } = require("./../models/subjectModel");
 
-let loggedUsersVar;
+let loggedUsers;
 
-const loggedUsers = require("./../models/passModel");
+const PassModel = require("./../models/passModel");
 
 exports.giveHomework = (day) => {
   let data = ``,
@@ -125,7 +125,6 @@ exports.resetUserId = (usersType, userID) => {
 exports.sendMessage = (bot, id, html, type, options) => {
   switch (type) {
     case "start":
-      // Sending response message
       bot.sendMessage(id, html, {
         parse_mode: "HTML",
         disable_notification: true,
@@ -135,7 +134,6 @@ exports.sendMessage = (bot, id, html, type, options) => {
       });
       break;
     case "days":
-      // Sending response message
       bot.sendMessage(id, html, {
         parse_mode: "HTML",
         disable_notification: true,
@@ -153,7 +151,6 @@ exports.sendMessage = (bot, id, html, type, options) => {
       html = `
         <strong>Какой предмет хочешь запиcать?</strong>`;
 
-      // Sending response message
       bot.sendMessage(id, html, {
         parse_mode: "HTML",
         disable_notification: true,
@@ -182,7 +179,6 @@ exports.sendMessage = (bot, id, html, type, options) => {
         <i>Я запишу её как домашка по предмету ${options.subj.subject}</i>
         `;
 
-      // Sending response message
       bot.sendMessage(id, html, {
         parse_mode: "HTML",
         disable_notification: true,
@@ -195,7 +191,6 @@ exports.sendMessage = (bot, id, html, type, options) => {
       // Creating response message
       html = `В какой ты группе?`;
 
-      // Sending response message
       bot.sendMessage(id, html, {
         parse_mode: "HTML",
         disable_notification: true,
@@ -211,7 +206,6 @@ exports.sendMessage = (bot, id, html, type, options) => {
       // Creating response message
       html = `В какой ты группе?`;
 
-      // Sending response message
       bot.sendMessage(id, html, {
         parse_mode: "HTML",
         disable_notification: true,
@@ -228,7 +222,6 @@ exports.sendMessage = (bot, id, html, type, options) => {
       });
       break;
     case "none":
-      // Sending response message
       bot.sendMessage(id, html, {
         parse_mode: "HTML",
         disable_notification: true,
@@ -353,12 +346,12 @@ exports.getHomeworkData = () => {
   return homework;
 };
 
-exports.checkLoggedUser = async (user_id) => {
+exports.isUserLoggedIn = async (user_id) => {
   try {
-    loggedUsersVar = await loggedUsers.findOne({
+    loggedUsers = await PassModel.findOne({
       _id: "5fef8ccf82a7bc607cd66d49",
     });
-    return loggedUsersVar.loggedUsers.includes(user_id);
+    return loggedUsers.loggedUsers.includes(user_id);
   } catch (err) {
     console.error(err);
   }
@@ -366,19 +359,21 @@ exports.checkLoggedUser = async (user_id) => {
 
 exports.deleteLoggedUser = async (user_id) => {
   try {
-    loggedUsersVar = await loggedUsers.findOne({
+    loggedUsers = await PassModel.findOne({
       _id: "5fef8ccf82a7bc607cd66d49",
     });
-    if (loggedUsersVar.loggedUsers.includes(user_id)) {
-      loggedUsersVar.loggedUsers.forEach((el, i) => {
+
+    if (loggedUsers.loggedUsers.includes(user_id)) {
+      loggedUsers.loggedUsers.forEach((el, i) => {
         if (el === user_id) {
-          loggedUsersVar.loggedUsers.splice(i, 1);
-          loggedUsersVar.save();
+          loggedUsers.loggedUsers.splice(i, 1);
+          loggedUsers.save();
         }
       });
-    } else {
-      console.log("Requested user is not in the array");
+      return;
     }
+
+    console.log("Requested user is not in the array");
   } catch (err) {
     console.error(err);
   }
@@ -386,15 +381,17 @@ exports.deleteLoggedUser = async (user_id) => {
 
 exports.addLoggedUser = async (user_id) => {
   try {
-    loggedUsersVar = await loggedUsers.findOne({
+    loggedUsers = await PassModel.findOne({
       _id: "5fef8ccf82a7bc607cd66d49",
     });
-    if (!loggedUsersVar.loggedUsers.includes(user_id)) {
-      loggedUsersVar.loggedUsers.push(user_id);
-      loggedUsersVar.save();
-    } else {
-      console.log("This user is already logged in");
+
+    if (!loggedUsers.loggedUsers.includes(user_id)) {
+      loggedUsers.loggedUsers.push(user_id);
+      loggedUsers.save();
+      return;
     }
+
+    console.log("This user is already logged in");
   } catch (err) {
     console.error(err);
   }
