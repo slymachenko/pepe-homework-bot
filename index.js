@@ -5,7 +5,10 @@ const mongoose = require("mongoose");
 const subjectController = require("./controllers/subjectController");
 
 dotenv.config({ path: "./config.env" });
-mongoose.connect(process.env.MONGO_URL);
+mongoose.connect(process.env.MONGO_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
 const TOKEN = process.env.TOKEN;
 const chatId = process.env.CHAT_ID; // define the chat to which next day homework is sent

@@ -6,15 +6,15 @@ const {
   FridaySubj,
 } = require("./../models/subjectModel");
 
-let loggedUsers;
-
 const PassModel = require("./../models/passModel");
 
+let loggedUsers;
+
 exports.giveHomework = (day) => {
-  let data = ``,
-    photos = [], // arr to store all photos of the day
-    photo, // [PHOTO] that is attached to each homework that has a photo
-    groupPhoto = []; // [PHOTO] that is attached to each homework that has a photo and divided into groups
+  let data = ``;
+  let photos = []; // arr to store all photos of the day
+  let photo; // [PHOTO] that is attached to each homework that has a photo
+  let groupPhoto = []; // [PHOTO] that is attached to each homework that has a photo and divided into groups
 
   // Looping over each object to define the one that is divided into groups and additional info object
   day.forEach((el, index) => {
@@ -327,6 +327,7 @@ exports.resetSubjects = (doc) => {
 
 exports.getHomeworkData = () => {
   let homework = {};
+
   MondaySubj.find((err, msg) => {
     homework.Monday = msg;
   });
