@@ -1,11 +1,15 @@
 const mongoose = require("mongoose");
 
 const daySchema = new mongoose.Schema({
-  day: Number, // 0-Mon 1-Tue etc.
+  dayIndex: { type: Number, required: [true, "Please provide a day number"] }, // 0-Mon 1-Tue etc.
   id: [Number], // user id of class members
   subjects: [
     {
-      subject: String,
+      subject: {
+        type: String,
+        unique: true,
+        required: [true, "Please provide a subject name"],
+      },
       group: String,
       text: String,
       photo: String,
@@ -13,4 +17,4 @@ const daySchema = new mongoose.Schema({
   ],
 });
 
-let weekday = mongoose.model("Weekday", daySchema, "homework");
+module.exports = mongoose.model("Weekday", daySchema, "homework");

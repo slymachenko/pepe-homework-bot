@@ -6,7 +6,10 @@ dotenv.config({ path: "./config.env" });
 mongoose.connect(process.env.MONGO_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  useFindAndModify: false,
 });
+
+const dayController = require("./controllers/dayController");
 
 const TOKEN = process.env.TOKEN;
 
