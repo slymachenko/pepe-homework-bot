@@ -7,7 +7,7 @@ exports.updateHomework = async (dayIndex, subjName, hwText) => {
     const subjects = await subjectController.findDaySubjects(dayIndex);
 
     // VALIDATION
-    if (day === null || !new RegExp("^[0-6]$").test(dayIndex))
+    if (day === null || !new RegExp("^[1-7]$").test(dayIndex))
       return `wrong dayIndex`;
     if (!subjects.includes(subjName)) return `wrong subject`;
     if (hwText.length === 0) return `there's no homework text`;
@@ -34,14 +34,8 @@ exports.findDayHomework = async (dayIndex) => {
     let homeworkData = `<strong>Homework: </strong>`;
 
     day.subjects.forEach((el) => {
-      let line;
-      if (el.group) {
-        line = `
-    <strong>${el.subject}(${el.group}):</strong> ${el.text}`;
-      } else {
-        line = `
+      let line = `
     <strong>${el.subject}:</strong> ${el.text}`;
-      }
 
       homeworkData += line;
     });
@@ -68,13 +62,8 @@ exports.findSubjHomework = async (dayIndex, subjectName) => {
     });
 
     subjects.forEach((subject) => {
-      if (subject.group) {
-        homeworkData += `
-<strong>${subject.subject}(${subject.group}): ${subject.text}</strong>`;
-      } else {
-        homeworkData += `
+      homeworkData += `
 <strong>${subject.subject}: ${subject.text}</strong>`;
-      }
     });
 
     return homeworkData;

@@ -54,11 +54,11 @@ bot.onText(/^\/help$/, (msg) => {
   <strong>/show *day* *subject*(optional)</strong> - shows homework for the day or for the specific subject
   (for example: '/show 0', '/show 0 Физ-ра')
   
-  0 - Mon
-  1 - Tue
-  2 - Wed
-  3 - Thu
-  4 - Fri`;
+  1 - Mon
+  2 - Tue
+  3 - Wed
+  4 - Thu
+  5 - Fri`;
 
   bot.sendMessage(id, response, options);
 });
@@ -87,7 +87,7 @@ bot.onText(/^\/show/, async (msg) => {
   const subjectName = textOptions[2];
 
   // DAY VALIDATION
-  if (!new RegExp("^[0-6]$").test(dayIndex)) {
+  if (!new RegExp("^[1-7]$").test(dayIndex)) {
     const response = `wrong dayIndex`;
 
     return bot.sendMessage(id, response, options);

@@ -13,7 +13,6 @@ const daySchema = new mongoose.Schema({
         type: String,
         required: [true, "Please provide a subject name"],
       },
-      group: String,
       text: String,
       photo: String,
     },
