@@ -1,18 +1,25 @@
 const dayController = require("./dayController");
+const subjectController = require("./subjectController");
 
-exports.updateHomework = async (dayIndex, subjectName, hwText) => {
+exports.updateHomework = async (dayIndex, subjName, hwText) => {
   try {
     const day = await dayController.findDay(dayIndex);
+    const subjects = await subjectController.findDaySubjects(dayIndex);
 
-    if (day === null) return "wrong dayIndex";
+    // VALIDATION
+    if (day === null || !new RegExp("^[0-6]$").test(dayIndex))
+      return `wrong dayIndex`;
+    if (!subjects.includes(subjName)) return `wrong subject`;
+    if (hwText.length === 0) return `there's no homework text`;
 
     const subjectIndex = day.subjects.findIndex(
-      (el) => (el.subject = subjectName)
+      (el) => (el.subject = subjName)
     );
 
     day.subjects[subjectIndex].text = hwText || day.subjects[subjectIndex].text;
 
     day.save();
+    return `homework has been updated`;
   } catch (err) {
     console.error(err);
   }

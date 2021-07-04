@@ -77,39 +77,15 @@ bot.onText(/^\/note/, async (msg) => {
     disable_notification: true,
   };
 
-  const textOptions = msg.text.split(" ");
-  const dayIndex = textOptions[1];
-  const subject = textOptions[2];
+  const [, dayIndex, subjName, ...textOptions] = msg.text.split(" ");
 
-  textOptions.splice(0, 3);
-  const homework = textOptions.join(" ");
+  const homeworkText = textOptions.join(" ");
 
-  // DAY VALIDATION
-  if (!new RegExp("^[0-6]$").test(dayIndex)) {
-    const response = `wrong dayIndex`;
-
-    return bot.sendMessage(id, response, options);
-  }
-
-  const subjects = await subjectController.findDaySubjects(dayIndex);
-
-  // SUBJECT VALIDATION
-  if (!subjects.includes(subject)) {
-    const response = `wrong subject`;
-
-    return bot.sendMessage(id, response, options);
-  }
-
-  // HOMEWORK VALIDATION
-  if (homework.length === 0) {
-    const response = `there's no homework text`;
-
-    return bot.sendMessage(id, response, options);
-  }
-
-  homeworkController.updateHomework(dayIndex, subject, homework);
-
-  const response = `homework has been updated`;
+  const response = await homeworkController.updateHomework(
+    dayIndex,
+    subjName,
+    homeworkText
+  );
 
   bot.sendMessage(id, response, options);
 });
@@ -135,6 +111,13 @@ bot.onText(/^\/show/, async (msg) => {
 
   if (subjectName) {
     const subjects = await subjectController.findDaySubjects(dayIndex);
+
+    // DAY VALIDATION
+    if (subjects === null) {
+      const response = `wrong dayIndex`;
+
+      return bot.sendMessage(id, response, options);
+    }
 
     // SUBJECT VALIDATION
     if (!subjects.includes(subjectName)) {

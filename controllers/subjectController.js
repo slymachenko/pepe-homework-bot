@@ -4,7 +4,7 @@ exports.findDaySubjects = async (dayIndex) => {
   try {
     const day = await dayController.findDay(dayIndex);
 
-    if (day === null) return "wrong dayIndex";
+    if (day === null) return null;
 
     const subjects = [];
 
