@@ -11,7 +11,6 @@ mongoose.connect(process.env.MONGO_URL, {
 
 const homeworkController = require("./controllers/homeworkController");
 const subjectController = require("./controllers/subjectController");
-const dayController = require("./controllers/dayController");
 
 const TOKEN = process.env.TOKEN;
 
@@ -27,6 +26,11 @@ const bot = new TelegramBot(TOKEN, {
 
 console.log("Bot have been started...");
 
+const options = {
+  parse_mode: "HTML",
+  disable_notification: true,
+};
+
 // COMMAND LISTENERS
 
 bot.onText(/^\/start$/, (msg) => {
@@ -37,11 +41,6 @@ bot.onText(/^\/start$/, (msg) => {
   <i>Меня зовут лягушонок ПЕПЕ и я помогу тебе разобраться с этой глупой домашкой!
   
 /help for more info</i>`;
-
-  const options = {
-    parse_mode: "HTML",
-    disable_notification: true,
-  };
 
   bot.sendMessage(id, response, options);
 });
@@ -61,21 +60,11 @@ bot.onText(/^\/help$/, (msg) => {
   3 - Thu
   4 - Fri`;
 
-  const options = {
-    parse_mode: "HTML",
-    disable_notification: true,
-  };
-
   bot.sendMessage(id, response, options);
 });
 
 bot.onText(/^\/note/, async (msg) => {
   const { id } = msg.chat;
-
-  const options = {
-    parse_mode: "HTML",
-    disable_notification: true,
-  };
 
   const [, dayIndex, subjName, ...textOptions] = msg.text.split(" ");
 
@@ -92,11 +81,6 @@ bot.onText(/^\/note/, async (msg) => {
 
 bot.onText(/^\/show/, async (msg) => {
   const { id } = msg.chat;
-
-  const options = {
-    parse_mode: "HTML",
-    disable_notification: true,
-  };
 
   const textOptions = msg.text.split(" ");
   const dayIndex = textOptions[1];
