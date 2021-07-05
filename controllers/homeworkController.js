@@ -1,5 +1,6 @@
 const dayController = require("./dayController");
 const subjectController = require("./subjectController");
+const messageController = require("./messageController");
 
 exports.updateHomework = async (dayIndex, subjName, hwText) => {
   try {
@@ -8,9 +9,11 @@ exports.updateHomework = async (dayIndex, subjName, hwText) => {
 
     // VALIDATION
     if (day === null || !new RegExp("^[1-7]$").test(dayIndex))
-      return `wrong dayIndex`;
-    if (!subjects.includes(subjName)) return `wrong subject`;
-    if (hwText.length === 0) return `there's no homework text`;
+      return messageController.responseMessage("dayIndexErr");
+    if (!subjects.includes(subjName))
+      return messageController.responseMessage("subjErr");
+    if (hwText.length === 0)
+      return messageController.responseMessage("hwTextErr");
 
     const subjectIndex = day.subjects.findIndex(
       (el) => (el.subject = subjName)
@@ -29,7 +32,9 @@ exports.findDayHomework = async (dayIndex) => {
   try {
     const day = await dayController.findDay(dayIndex);
 
-    if (day === null) return "wrong dayIndex";
+    const response = messageController.responseMessage("dayIndexErr");
+
+    if (day === null) return response;
 
     let homeworkData = `<strong>Homework: </strong>`;
 
@@ -50,7 +55,9 @@ exports.findSubjHomework = async (dayIndex, subjectName) => {
   try {
     const day = await dayController.findDay(dayIndex);
 
-    if (day === null) return "wrong dayIndex";
+    const response = messageController.responseMessage("dayIndexErr");
+
+    if (day === null) return response;
 
     let homeworkData = ``;
 

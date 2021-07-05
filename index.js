@@ -11,6 +11,7 @@ mongoose.connect(process.env.MONGO_URL, {
 
 const homeworkController = require("./controllers/homeworkController");
 const subjectController = require("./controllers/subjectController");
+const messageController = require("./controllers/messageController");
 
 const TOKEN = process.env.TOKEN;
 
@@ -35,12 +36,9 @@ const options = {
 
 bot.onText(/^\/start$/, (msg) => {
   const { id } = msg.chat;
+  const username = msg.from.first_name;
 
-  const response = `
-  <strong>Привет, ${msg.from.first_name}!</strong>
-  <i>Меня зовут лягушонок ПЕПЕ и я помогу тебе разобраться с этой глупой домашкой!
-  
-/help for more info</i>`;
+  const response = messageController.responseMessage("start", { username });
 
   bot.sendMessage(id, response, options);
 });
@@ -48,17 +46,7 @@ bot.onText(/^\/start$/, (msg) => {
 bot.onText(/^\/help$/, (msg) => {
   const { id } = msg.chat;
 
-  const response = `
-  <strong>/note *day* *subject* *homework*</strong> - notes homework for specific subject
-  (for example: /note 0 Физ-ра взять гачи костюм)
-  <strong>/show *day* *subject*(optional)</strong> - shows homework for the day or for the specific subject
-  (for example: '/show 0', '/show 0 Физ-ра')
-  
-  1 - Mon
-  2 - Tue
-  3 - Wed
-  4 - Thu
-  5 - Fri`;
+  const response = messageController.responseMessage("help");
 
   bot.sendMessage(id, response, options);
 });
@@ -86,26 +74,19 @@ bot.onText(/^\/show/, async (msg) => {
   const dayIndex = textOptions[1];
   const subjectName = textOptions[2];
 
-  // DAY VALIDATION
-  if (!new RegExp("^[1-7]$").test(dayIndex)) {
-    const response = `wrong dayIndex`;
-
-    return bot.sendMessage(id, response, options);
-  }
-
   if (subjectName) {
     const subjects = await subjectController.findDaySubjects(dayIndex);
 
     // DAY VALIDATION
     if (subjects === null) {
-      const response = `wrong dayIndex`;
+      const response = messageController.responseMessage("dayIndexErr");
 
       return bot.sendMessage(id, response, options);
     }
 
     // SUBJECT VALIDATION
     if (!subjects.includes(subjectName)) {
-      const response = `wrong subject`;
+      const response = messageController.responseMessage("subjErr");
 
       return bot.sendMessage(id, response, options);
     }
