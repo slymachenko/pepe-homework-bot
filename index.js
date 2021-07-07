@@ -104,6 +104,16 @@ bot.onText(/^\/show/, async (msg) => {
   bot.sendMessage(id, response, options);
 });
 
+bot.onText(/^\/clear/, async (msg) => {
+  const { id } = msg.chat;
+
+  const [, dayIndex, subjName] = msg.text.split(" ");
+
+  const response = await homeworkController.clearHomework(dayIndex, subjName);
+
+  bot.sendMessage(id, response, options);
+});
+
 bot.on("polling_error", (err) => console.log(err));
 
 // Sending an empty response on request

@@ -16,7 +16,7 @@ exports.updateHomework = async (dayIndex, subjName, hwText) => {
       return messageController.responseMessage("hwTextErr");
 
     const subjectIndex = day.subjects.findIndex(
-      (el) => (el.subject = subjName)
+      (el) => el.subject === subjName
     );
 
     day.subjects[subjectIndex].text = hwText || day.subjects[subjectIndex].text;
@@ -74,6 +74,41 @@ exports.findSubjHomework = async (dayIndex, subjectName) => {
     });
 
     return homeworkData;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+exports.clearHomework = async (dayIndex, subjName) => {
+  try {
+    const day = await dayController.findDay(dayIndex);
+    const subjects = await subjectController.findDaySubjects(dayIndex);
+
+    // VALIDATION
+    if (day === null || !new RegExp("^[1-7]$").test(dayIndex))
+      return messageController.responseMessage("dayIndexErr");
+    if (subjName && !subjects.includes(subjName))
+      return messageController.responseMessage("subjErr");
+
+    if (subjName) {
+      const subjectIndex = day.subjects.findIndex(
+        (el) => el.subject === subjName
+      );
+
+      day.subjects[subjectIndex].text = "";
+      day.subjects[subjectIndex].photo = "";
+
+      day.save();
+      return `homework for ${subjName} has been cleared`;
+    }
+
+    day.subjects.forEach((el) => {
+      el.text = "";
+      el.photo = "";
+    });
+
+    day.save();
+    return `homework for ${dayIndex} day has been cleared`;
   } catch (err) {
     console.error(err);
   }
