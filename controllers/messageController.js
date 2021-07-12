@@ -23,11 +23,18 @@ for example:
       return `<strong>/note *day* *subject* *homework*</strong> - notes homework for specific subject
 for example:
     <i>/note 1 Физ-ра взять гачи костюм</i>
-<strong>/show *day* *subject*(optional)</strong> - shows homework for the day or for the specific subject
+
+<strong>/show *day*(optional) *subject*(optional)</strong> - shows homework for the day or for the specific subject or all subjects that have homework
 for example: 
+    <i>/show</i>
     <i>/show 1</i> 
     <i>/show 1 Физ-ра</i>
           
+<strong>/clear *day* *subject*(optional)</strong> - clears homework for the day or for the soecific subject
+for example: 
+    <i>/clear 1</i>
+    <i>/clear 1 Физ-ра</i>
+
 Day Numbers:
 1 - Mon
 2 - Tue

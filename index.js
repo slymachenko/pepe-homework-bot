@@ -74,6 +74,12 @@ bot.onText(/^\/show/, async (msg) => {
   const dayIndex = textOptions[1];
   const subjectName = textOptions[2];
 
+  if (!dayIndex && !subjectName) {
+    const response = await homeworkController.findAllHomework();
+
+    return bot.sendMessage(id, response, options);
+  }
+
   if (subjectName) {
     const subjects = await subjectController.findDaySubjects(dayIndex);
 

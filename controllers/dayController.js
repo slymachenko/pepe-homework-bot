@@ -17,3 +17,7 @@ exports.editDay = async (dayIndex, obj) => {
 exports.deleteDay = async (dayIndex) => {
   return await Weekday.deleteOne({ dayIndex });
 };
+
+exports.findAllDays = async () => {
+  return await Weekday.find({});
+};
