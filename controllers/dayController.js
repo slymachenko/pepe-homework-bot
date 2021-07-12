@@ -1,23 +1,43 @@
 const Weekday = require("../models/dayModel");
 
 exports.createDay = async (obj) => {
-  return await Weekday.create(obj);
+  try {
+    return await Weekday.create(obj);
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 exports.findDay = async (dayIndex) => {
-  return await Weekday.findOne({ dayIndex });
+  try {
+    return await Weekday.findOne({ dayIndex });
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 exports.editDay = async (dayIndex, obj) => {
-  return await Weekday.findOneAndUpdate({ dayIndex }, obj, {
-    new: true,
-  });
+  try {
+    return await Weekday.findOneAndUpdate({ dayIndex }, obj, {
+      new: true,
+    });
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 exports.deleteDay = async (dayIndex) => {
-  return await Weekday.deleteOne({ dayIndex });
+  try {
+    return await Weekday.deleteOne({ dayIndex });
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 exports.findAllDays = async () => {
-  return await Weekday.find({});
+  try {
+    return await Weekday.find({});
+  } catch (err) {
+    console.error(err);
+  }
 };

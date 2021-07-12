@@ -52,72 +52,84 @@ bot.onText(/^\/help$/, (msg) => {
 });
 
 bot.onText(/^\/note/, async (msg) => {
-  const { id } = msg.chat;
+  try {
+    const { id } = msg.chat;
 
-  const [, dayIndex, subjName, ...textOptions] = msg.text.split(" ");
+    const [, dayIndex, subjName, ...textOptions] = msg.text.split(" ");
 
-  const homeworkText = textOptions.join(" ");
+    const homeworkText = textOptions.join(" ");
 
-  const response = await homeworkController.updateHomework(
-    dayIndex,
-    subjName,
-    homeworkText
-  );
+    const response = await homeworkController.updateHomework(
+      dayIndex,
+      subjName,
+      homeworkText
+    );
 
-  bot.sendMessage(id, response, options);
+    bot.sendMessage(id, response, options);
+  } catch (err) {
+    console.error(err);
+  }
 });
 
 bot.onText(/^\/show/, async (msg) => {
-  const { id } = msg.chat;
+  try {
+    const { id } = msg.chat;
 
-  const textOptions = msg.text.split(" ");
-  const dayIndex = textOptions[1];
-  const subjectName = textOptions[2];
+    const textOptions = msg.text.split(" ");
+    const dayIndex = textOptions[1];
+    const subjectName = textOptions[2];
 
-  if (!dayIndex && !subjectName) {
-    const response = await homeworkController.findAllHomework();
-
-    return bot.sendMessage(id, response, options);
-  }
-
-  if (subjectName) {
-    const subjects = await subjectController.findDaySubjects(dayIndex);
-
-    // DAY VALIDATION
-    if (subjects === null) {
-      const response = messageController.responseMessage("dayIndexErr");
+    if (!dayIndex && !subjectName) {
+      const response = await homeworkController.findAllHomework();
 
       return bot.sendMessage(id, response, options);
     }
 
-    // SUBJECT VALIDATION
-    if (!subjects.includes(subjectName)) {
-      const response = messageController.responseMessage("subjErr");
+    if (subjectName) {
+      const subjects = await subjectController.findDaySubjects(dayIndex);
+
+      // DAY VALIDATION
+      if (subjects === null) {
+        const response = messageController.responseMessage("dayIndexErr");
+
+        return bot.sendMessage(id, response, options);
+      }
+
+      // SUBJECT VALIDATION
+      if (!subjects.includes(subjectName)) {
+        const response = messageController.responseMessage("subjErr");
+
+        return bot.sendMessage(id, response, options);
+      }
+
+      const response = await homeworkController.findSubjHomework(
+        dayIndex,
+        subjectName
+      );
 
       return bot.sendMessage(id, response, options);
     }
 
-    const response = await homeworkController.findSubjHomework(
-      dayIndex,
-      subjectName
-    );
+    const response = await homeworkController.findDayHomework(dayIndex);
 
-    return bot.sendMessage(id, response, options);
+    bot.sendMessage(id, response, options);
+  } catch (err) {
+    console.error(err);
   }
-
-  const response = await homeworkController.findDayHomework(dayIndex);
-
-  bot.sendMessage(id, response, options);
 });
 
 bot.onText(/^\/clear/, async (msg) => {
-  const { id } = msg.chat;
+  try {
+    const { id } = msg.chat;
 
-  const [, dayIndex, subjName] = msg.text.split(" ");
+    const [, dayIndex, subjName] = msg.text.split(" ");
 
-  const response = await homeworkController.clearHomework(dayIndex, subjName);
+    const response = await homeworkController.clearHomework(dayIndex, subjName);
 
-  bot.sendMessage(id, response, options);
+    bot.sendMessage(id, response, options);
+  } catch (err) {
+    console.error(err);
+  }
 });
 
 bot.on("polling_error", (err) => console.log(err));

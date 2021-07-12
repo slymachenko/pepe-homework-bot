@@ -29,19 +29,23 @@ exports.updateHomework = async (dayIndex, subjName, hwText) => {
 };
 
 exports.findAllHomework = async () => {
-  const days = await dayController.findAllDays();
+  try {
+    const days = await dayController.findAllDays();
 
-  let response = `<strong>All homework:</strong>`;
+    let response = `<strong>All homework:</strong>`;
 
-  days.forEach((day) => {
-    day.subjects.forEach((subj) => {
-      if (subj.text.length > 0)
-        response += `
+    days.forEach((day) => {
+      day.subjects.forEach((subj) => {
+        if (subj.text.length > 0)
+          response += `
 ${day.dayIndex} ${subj.subject}: ${subj.text}`;
+      });
     });
-  });
 
-  return response;
+    return response;
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 exports.findDayHomework = async (dayIndex) => {
