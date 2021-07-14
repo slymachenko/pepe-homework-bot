@@ -133,3 +133,22 @@ exports.clearHomework = async (dayIndex, subjName) => {
     console.error(err);
   }
 };
+
+exports.clearAllHomework = async () => {
+  try {
+    const days = await dayController.findAllDays();
+
+    days.forEach((day) => {
+      day.subjects.forEach((subj) => {
+        subj.text = "";
+        subj.photo = "";
+      });
+
+      day.save();
+    });
+
+    return `all homework has been cleared`;
+  } catch (err) {
+    console.error(err);
+  }
+};

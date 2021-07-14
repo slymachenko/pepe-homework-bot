@@ -77,15 +77,15 @@ bot.onText(/^\/show/, async (msg) => {
 
     const textOptions = msg.text.split(" ");
     const dayIndex = textOptions[1];
-    const subjectName = textOptions[2];
+    const subjName = textOptions[2];
 
-    if (!dayIndex && !subjectName) {
+    if (!dayIndex && !subjName) {
       const response = await homeworkController.findAllHomework();
 
       return bot.sendMessage(id, response, options);
     }
 
-    if (subjectName) {
+    if (subjName) {
       const subjects = await subjectController.findDaySubjects(dayIndex);
 
       // DAY VALIDATION
@@ -96,7 +96,7 @@ bot.onText(/^\/show/, async (msg) => {
       }
 
       // SUBJECT VALIDATION
-      if (!subjects.includes(subjectName)) {
+      if (!subjects.includes(subjName)) {
         const response = messageController.responseMessage("subjErr");
 
         return bot.sendMessage(id, response, options);
@@ -104,7 +104,7 @@ bot.onText(/^\/show/, async (msg) => {
 
       const response = await homeworkController.findSubjHomework(
         dayIndex,
-        subjectName
+        subjName
       );
 
       return bot.sendMessage(id, response, options);
@@ -123,6 +123,12 @@ bot.onText(/^\/clear/, async (msg) => {
     const { id } = msg.chat;
 
     const [, dayIndex, subjName] = msg.text.split(" ");
+
+    if (!dayIndex && !subjName) {
+      const response = await homeworkController.clearAllHomework();
+
+      return bot.sendMessage(id, response, options);
+    }
 
     const response = await homeworkController.clearHomework(dayIndex, subjName);
 
