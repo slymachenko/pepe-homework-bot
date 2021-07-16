@@ -2,7 +2,7 @@ const dayController = require("./dayController");
 const subjectController = require("./subjectController");
 const messageController = require("./messageController");
 
-exports.updateHomework = async (dayIndex, subjName, hwText) => {
+exports.updateHomework = async (dayIndex, subjName, options) => {
   try {
     const day = await dayController.findDay(dayIndex);
     const subjects = await subjectController.findDaySubjects(dayIndex);
@@ -12,14 +12,17 @@ exports.updateHomework = async (dayIndex, subjName, hwText) => {
       return messageController.responseMessage("dayIndexErr");
     if (!subjects.includes(subjName))
       return messageController.responseMessage("subjErr");
-    if (hwText.length === 0)
-      return messageController.responseMessage("hwTextErr");
+    if (!options.homeworkText && !options.photo)
+      return messageController.responseMessage("hwText&photoErr");
 
     const subjectIndex = day.subjects.findIndex(
       (el) => el.subject === subjName
     );
 
-    day.subjects[subjectIndex].text = hwText || day.subjects[subjectIndex].text;
+    day.subjects[subjectIndex].text =
+      options.homeworkText || day.subjects[subjectIndex].text;
+    day.subjects[subjectIndex].photo =
+      options.photo || day.subjects[subjectIndex].photo;
 
     day.save();
     return `homework has been updated`;
@@ -36,9 +39,9 @@ exports.findAllHomework = async () => {
 
     days.forEach((day) => {
       day.subjects.forEach((subj) => {
-        if (subj.text.length > 0)
+        if (subj.text.length > 0 || subj.photo.length > 0)
           response += `
-${day.dayIndex} ${subj.subject}: ${subj.text}`;
+${day.dayIndex} ${subj.subject}: ${subj.text} ${subj.photo ? `[PHOTO]` : ``}`;
       });
     });
 
@@ -58,9 +61,11 @@ exports.findDayHomework = async (dayIndex) => {
 
     let homeworkData = `<strong>Homework: </strong>`;
 
-    day.subjects.forEach((el) => {
+    day.subjects.forEach((subj) => {
       let line = `
-    <strong>${el.subject}:</strong> ${el.text}`;
+    <strong>${subj.subject}:</strong> ${subj.text} ${
+        subj.photo ? `[PHOTO]` : ``
+      }`;
 
       homeworkData += line;
     });
@@ -80,6 +85,7 @@ exports.findSubjHomework = async (dayIndex, subjectName) => {
     if (day === null) return response;
 
     let homeworkData = ``;
+    let photo = ``;
 
     const subjects = [];
     day.subjects.forEach((el) => {
@@ -91,9 +97,10 @@ exports.findSubjHomework = async (dayIndex, subjectName) => {
     subjects.forEach((subject) => {
       homeworkData += `
 <strong>${subject.subject}: ${subject.text}</strong>`;
+      photo = subject.photo;
     });
 
-    return homeworkData;
+    return { homeworkData, photo };
   } catch (err) {
     console.error(err);
   }

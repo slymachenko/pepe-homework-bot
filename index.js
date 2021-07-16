@@ -62,7 +62,7 @@ bot.onText(/^\/note/, async (msg) => {
     const response = await homeworkController.updateHomework(
       dayIndex,
       subjName,
-      homeworkText
+      { homeworkText }
     );
 
     bot.sendMessage(id, response, options);
@@ -102,12 +102,21 @@ bot.onText(/^\/show/, async (msg) => {
         return bot.sendMessage(id, response, options);
       }
 
-      const response = await homeworkController.findSubjHomework(
+      const subjData = await homeworkController.findSubjHomework(
         dayIndex,
         subjName
       );
 
-      return bot.sendMessage(id, response, options);
+      const response = subjData.homeworkData;
+      const photo = subjData.photo;
+
+      if (!photo) return bot.sendMessage(id, response, options);
+
+      return bot.sendPhoto(id, photo, {
+        parse_mode: "HTML",
+        disable_notification: true,
+        caption: response,
+      });
     }
 
     const response = await homeworkController.findDayHomework(dayIndex);
@@ -136,6 +145,29 @@ bot.onText(/^\/clear/, async (msg) => {
   } catch (err) {
     console.error(err);
   }
+});
+
+bot.on("message", async (msg) => {
+  const { id } = msg.chat;
+
+  if (!msg.photo) return;
+
+  if (!msg.caption) {
+    const response = messageController.responseMessage("photoErr");
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  const [, dayIndex, subjName, ...textOptions] = msg.caption.split(" ");
+  const homeworkText = textOptions.join(" ");
+  const photo = msg.photo[1].file_id;
+
+  const response = await homeworkController.updateHomework(dayIndex, subjName, {
+    photo,
+    homeworkText,
+  });
+
+  bot.sendMessage(id, response, options);
 });
 
 bot.on("polling_error", (err) => console.log(err));

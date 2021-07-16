@@ -15,20 +15,28 @@ for example:
 To see subjects on specific day type /show *day*
 for example:
     <i>/show 1</i> - shows homework on Monday`;
-    case "hwTextErr":
-      return `Error: there's no homework text. Please provide a homework text.
+    case "hwText&photoErr":
+      return `Error: there's no homework text & no photo. Please provide a homework text or/and photo.
 for example:
-    <i>/note 1 Физ-ра взять гачи костюм</i> - notes homework for Monday for 'Физ-ра' subject`;
+    <i>/note 1 Физ-ра взять гачи костюм</i> - notes homework for Monday for 'Физ-ра' subject
+    *in photo caption* <i>/note 1 Физ-ра</i> - attaches a photo for Monday for 'Физ-ра' subject
+    *in photo caption* <i>/note 1 Физ-ра взять гачи костюм</i> - attaches a photo and text for Monday for 'Физ-ра' subject`;
+    case "photoErr":
+      return `Error: there's no dayIndex and subjectName. Please provide valid dayIndex and SubjectName in photo caption
+for example:
+    *in photo caption* <i>/note 1 Физ-ра</i> - attaches a photo for Monday for 'Физ-ра' subject
+    *in photo caption* <i>/note 1 Физ-ра взять гачи костюм</i> - attaches a photo and text for Monday for 'Физ-ра' subject`;
     case "help":
-      return `<strong>/note *day* *subject* *homework*</strong> - notes homework for specific subject
+      return `<strong>/note *day* *subject* *homework*</strong> - notes homework or/and photo for specific subject
 for example:
-    <i>/note 1 Физ-ра взять гачи костюм</i>
-
-<strong>/show *day*(optional) *subject*(optional)</strong> - shows homework for the day or for the specific subject or all subjects that have homework
+    <i>/note 1 Физ-ра взять гачи костюм</i> - notes homework for Monday for 'Физ-ра' subject
+    *in photo caption* <i>/note 1 Физ-ра</i> - attaches a photo for Monday for 'Физ-ра' subject
+    *in photo caption* <i>/note 1 Физ-ра взять гачи костюм</i> - attaches a photo and text for Monday for 'Физ-ра' subject
+<strong>/show *day*(optional) *subject*(optional)</strong> - shows homework or/and photo for the day subjects or for the specific subject or all subjects that have homework
 for example: 
-    <i>/show</i>
-    <i>/show 1</i> 
-    <i>/show 1 Физ-ра</i>
+    <i>/show</i> - shows all subjects for which there's homework
+    <i>/show 1</i> - shows homework for Monday
+    <i>/show 1 Физ-ра</i> - shows homework for 'Физ-ра' subject with photo
           
 <strong>/clear *day* *subject*(optional)</strong> - clears homework for the day or for the soecific subject
 for example: 
