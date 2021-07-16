@@ -18,9 +18,18 @@ Telegram bot for easy access to homework for week
 
 `/start` - start the bot  
 `/help` - help info  
+
+`/show` - shows all homework  
 `/show *day*` - shows homework for the day  
 `/show *day* *subject*` - shows homework for the specific subject  
+
 `/note *day* *subject* *homework*` - notes homework for specific subject  
+\*in photo attachment\*`/note *day* *subject*` - attaches photo for the specific subject  
+\*in photo attachment\*`/note *day* *subject* *homework*` - attaches photo and homework for the specific subject  
+
+`/clear` - clears all homework   
+`/clear *day*` - clears homework for the day  
+`/clear *day* *subject*` - clears homework for the specific subject  
 
 `*day*` - num that represents the day of the week  
 `*subject*` - subject name that exists on the selected day  
