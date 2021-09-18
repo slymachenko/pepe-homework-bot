@@ -3,6 +3,10 @@ const mongoose = require("mongoose");
 const daySchema = new mongoose.Schema({
   subjects: [
     {
+      subjectIndex: {
+        type: Number,
+        required: [true, "Please provide a subject index"],
+      },
       subject: {
         type: String,
         required: [true, "Please provide a subject name"],

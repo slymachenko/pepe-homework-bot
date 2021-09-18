@@ -35,8 +35,17 @@ module.exports = (type, options) => {
       response = `Your class info:\n\nName: ${options.className}\nID: ${options.classID}\nPassword: ${options.classPass}\nNumber of users: ${options.usersNum}`;
       if (options.validErr)
         response = "<b>ERROR: you are not in any class </b>";
-      if (!options.classPass) response = `${options.classID}`;
-      if (!options.classID) response = `${options.classPass}`;
+      if (!options.classPass && options.classID)
+        response = `${options.classID}`;
+      if (!options.classID && options.classPass)
+        response = `${options.classPass}`;
+      break;
+    case "/add":
+      response = `${options.subjectName} has been successfully added to the ${options.dayIndex} day`;
+      if (options.err)
+        response = `ERROR: please provide day index, subject name and subject index.\n\nExample:\n/add 1 Informatics 1 - adds Informatics as a first subject on Monday`;
+      if (options.validErr)
+        response = `ERROR: Validation ERROR\nYou must be in the class\ndayIndex must be a number 1-7\nsubjetIndex must be a number 1-15`;
       break;
   }
 

@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 
 const getResponse = require("./controllers/messageController");
 const classController = require("./controllers/classController");
+const homeworkController = require("./controllers/homeworkController");
 
 dotenv.config({ path: "./config.env" });
 
@@ -67,7 +68,7 @@ bot.onText(/^\/create/, async (msg) => {
     password: classPass,
     users: [msg.from.id],
   });
-  console.log(classDoc);
+
   const classID = classDoc._id;
 
   response = getResponse(source, { className, classID, classPass });
@@ -184,3 +185,60 @@ bot.onText(/^\/class/, async (msg) => {
 
   bot.sendMessage(id, response, options);
 });
+
+bot.onText(/^\/add/, async (msg) => {
+  const { id } = msg.chat;
+  const userID = msg.from.id;
+  const [source, dayIndex, subjectName, subjectIndex, ...text] =
+    msg.text.split(" ");
+  const subjectObj = {
+    subjectIndex,
+    subject: subjectName,
+    text: "",
+    photo: "",
+  };
+  let response;
+
+  if (!subjectName || !subjectIndex || text.length > 0) {
+    response = getResponse(source, { err: true });
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  const homeworkDoc = await homeworkController.addSubject(
+    userID,
+    subjectObj,
+    dayIndex,
+    subjectIndex
+  );
+
+  if (!homeworkDoc) {
+    response = getResponse(source, { validErr: true });
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  response = getResponse(source, { subjectName, dayIndex });
+
+  bot.sendMessage(id, response, options);
+});
+
+// bot.onText(/^\/remove/, (msg) => {
+//   const { id } = msg.chat;
+// });
+
+// bot.onText(/^\/note/, (msg) => {
+//   const { id } = msg.chat;
+// });
+
+// bot.onText(/^\/show/, (msg) => {
+//   const { id } = msg.chat;
+// });
+
+// bot.onText(/^\/schedule/, (msg) => {
+//   const { id } = msg.chat;
+// });
+
+// bot.on("photo", (msg) => {
+//   const { id } = msg.chat;
+// });
