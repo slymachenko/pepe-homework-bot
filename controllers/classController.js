@@ -3,43 +3,68 @@ const Homework = require("../models/homeworkModel");
 
 exports.createClass = async (obj) => {
   try {
-    const { _id } = await Class.create(obj);
-    await Homework.create({ classID: _id });
-    return _id;
+    const classDoc = await Class.create(obj);
+
+    await Homework.create({ classID: classDoc._id });
+    return classDoc;
   } catch (err) {
     console.error(err);
   }
 };
 
-exports.findClass = async (dayIndex) => {
+exports.deleteClass = async (userID) => {
   try {
-    return await Class.findOne({ dayIndex });
+    const classDoc = await Class.findOne({ users: { $in: [userID] } });
+
+    if (!classDoc) return false;
+
+    await Class.deleteOne({ users: { $in: [userID] } });
+    await Homework.deleteOne({ classID: classDoc._id });
+
+    return classDoc;
   } catch (err) {
     console.error(err);
   }
 };
 
-exports.editClass = async (dayIndex, obj) => {
+exports.joinClass = async (classID, classPass, userID) => {
   try {
-    return await Class.findOneAndUpdate({ dayIndex }, obj, {
-      new: true,
-    });
+    const classDoc = await Class.findOne({ _id: classID, password: classPass });
+
+    if (!classDoc) return false;
+
+    classDoc.users.push(userID);
+    await classDoc.save();
+
+    return classDoc;
   } catch (err) {
     console.error(err);
   }
 };
 
-exports.deleteClass = async (classID, classPass) => {
+exports.leaveClass = async (userID) => {
   try {
-    const deletedClass = await Class.findOneAndDelete({
-      _id: classID,
-      password: classPass,
-    });
+    const classDoc = await Class.findOne({ users: { $in: [userID] } });
 
-    if (!deletedClass) return false;
+    if (!classDoc) return false;
 
-    await Homework.deleteOne({ classID });
-    return deletedClass.name;
+    const index = classDoc.users.indexOf(userID);
+    if (index !== -1) classDoc.users.splice(index, 1);
+    await classDoc.save();
+
+    return classDoc;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+exports.findClass = async (userID) => {
+  try {
+    const classDoc = await Class.findOne({ users: { $in: [userID] } });
+
+    if (!classDoc) return false;
+
+    return classDoc;
   } catch (err) {
     console.error(err);
   }
