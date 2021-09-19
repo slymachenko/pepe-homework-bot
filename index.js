@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 
 const getResponse = require("./controllers/messageController");
 const classController = require("./controllers/classController");
-const homeworkController = require("./controllers/homeworkController");
+const requestController = require("./controllers/requestController");
 
 dotenv.config({ path: "./config.env" });
 
@@ -27,18 +27,13 @@ bot.setWebHook(`${process.env.URL}/bot/${process.env.TOKEN}`);
 
 console.log("Bot have been started...");
 
-const options = {
-  parse_mode: "HTML",
-  disable_notification: true,
-};
-
 // COMMAND LISTENERS
 
 bot.onText(/^\/start$/, (msg, [source]) => {
   const { id } = msg.chat;
-  const username = msg.from.first_name;
+  const userName = msg.from.first_name;
 
-  const response = getResponse(source, { username });
+  const response = getResponse(source, { userName });
 
   bot.sendMessage(id, response);
 });
@@ -51,194 +46,166 @@ bot.onText(/^\/help$/, (msg, [source]) => {
   bot.sendMessage(id, response);
 });
 
+bot.onText(/^\/getid$/, (msg, [source]) => {
+  const { id } = msg.chat;
+  const userID = msg.from.id;
+
+  const response = getResponse(source, { userID });
+
+  bot.sendMessage(id, response);
+});
+
 bot.onText(/^\/create/, async (msg) => {
   const { id } = msg.chat;
-  let response;
-
-  const [source, className, classPass, ...text] = msg.text.split(" ");
-
-  if (!className || !classPass || text.length > 0) {
-    response = getResponse(source, { err: true });
-
-    return bot.sendMessage(id, response, options);
-  }
-
-  const classDoc = await classController.createClass({
-    name: className,
-    password: classPass,
-    users: [msg.from.id],
-  });
-
-  const classID = classDoc._id;
-
-  response = getResponse(source, { className, classID, classPass });
-
-  await bot.sendMessage(id, response, options);
-  await bot.sendMessage(id, `${classID}`);
-  bot.sendMessage(id, classPass);
-});
-
-bot.onText(/^\/delete$/, async (msg) => {
-  const { id } = msg.chat;
   const userID = msg.from.id;
-  const source = msg.text;
-  let response;
-
-  const classDoc = await classController.deleteClass(userID);
-
-  if (!classDoc) {
-    response = getResponse(source, { validErr: true });
-
-    return bot.sendMessage(id, response, options);
-  }
-
-  const [className, classID, classPass] = [
-    classDoc.name,
-    classDoc._id,
-    classDoc.password,
-  ];
-
-  response = getResponse(source, { className, classID, classPass });
-
-  bot.sendMessage(id, response, options);
-});
-
-bot.onText(/^\/join/, async (msg) => {
-  const { id } = msg.chat;
-  const userID = msg.from.id;
-  let response;
-
-  const [source, classID, classPass, ...text] = msg.text.split(" ");
-
-  if (!classID || !classPass || text.length > 0) {
-    response = getResponse(source, { err: true });
-    return bot.sendMessage(id, response, options);
-  }
-
-  const classDoc = await classController.joinClass(classID, classPass, userID);
-  if (classDoc) {
-    className = classDoc.name;
-    response = getResponse(source, { className, classID, classPass });
-  }
-
-  if (!classDoc) response = getResponse(source, { validErr: true });
-
-  bot.sendMessage(id, response, options);
-});
-
-bot.onText(/^\/leave$/, async (msg) => {
-  const { id } = msg.chat;
-  const userID = msg.from.id;
-  const source = msg.text;
-  let response;
-
-  const classDoc = await classController.leaveClass(userID);
-
-  const [className, classID, classPass] = [
-    classDoc.name,
-    classDoc._id,
-    classDoc.password,
-  ];
-
-  response = getResponse(source, { className, classID, classPass });
-
-  if (!classDoc) response = getResponse(source, { validErr: true });
-
-  bot.sendMessage(id, response, options);
-});
-
-bot.onText(/^\/class/, async (msg) => {
-  const { id } = msg.chat;
-  const userID = msg.from.id;
-  const [source, ...text] = msg.text.split(" ");
-  let response;
-
-  const classDoc = await classController.findClass(userID);
-
-  if (!classDoc) {
-    response = getResponse(source, { validErr: true });
-    return bot.sendMessage(id, response, options);
-  }
-
-  const [className, classID, classPass, usersNum] = [
-    classDoc.name,
-    classDoc._id,
-    classDoc.password,
-    classDoc.users.length,
-  ];
-
-  switch (text[0]) {
-    case "id":
-      response = getResponse(source, { classID });
-      break;
-    case "pass":
-      response = getResponse(source, { classPass });
-      break;
-    default:
-      response = getResponse(source, {
-        className,
-        classID,
-        classPass,
-        usersNum,
-      });
-  }
-
-  bot.sendMessage(id, response, options);
-});
-
-bot.onText(/^\/add/, async (msg) => {
-  const { id } = msg.chat;
-  const userID = msg.from.id;
-  const [source, dayIndex, subjectName, subjectIndex, ...text] =
-    msg.text.split(" ");
-  const subjectObj = {
-    subjectIndex,
-    subject: subjectName,
-    text: "",
-    photo: "",
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
   };
   let response;
 
-  if (!subjectName || !subjectIndex || text.length > 0) {
-    response = getResponse(source, { err: true });
+  const [source, className, ...text] = msg.text.split(" ");
 
-    return bot.sendMessage(id, response, options);
-  }
-
-  const homeworkDoc = await homeworkController.addSubject(
-    userID,
-    subjectObj,
-    dayIndex,
-    subjectIndex
-  );
-
-  if (!homeworkDoc) {
+  // checking is user is memeber of the class
+  const isUserinClass = await classController.checkUserinClass(userID);
+  if (isUserinClass) {
     response = getResponse(source, { validErr: true });
 
     return bot.sendMessage(id, response, options);
   }
 
-  response = getResponse(source, { subjectName, dayIndex });
+  // user message validation
+  if (!className || text.length > 0) {
+    response = getResponse(source, { err: true });
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  // creating document for class and homework
+  await classController.createClass({
+    name: className,
+    users: [
+      {
+        userID,
+        isAdmin: true,
+        request: "",
+      },
+    ],
+  });
+
+  response = getResponse(source, { className });
+
+  await bot.sendMessage(id, response, options);
+});
+
+bot.onText(/^\/delete$/, async (msg, [source]) => {
+  const { id } = msg.chat;
+  const userID = msg.from.id;
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+    reply_markup: {
+      keyboard: [["Back", "Delete сlass"]],
+      one_time_keyboard: true,
+    },
+  };
+  let response;
+
+  // checking is user is memeber of the class
+  const isUserinClass = await classController.checkUserinClass(userID);
+  if (!isUserinClass) {
+    response = getResponse(source, { validErr: true });
+    options.reply_markup = null;
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  // checking is user Admin
+  const isUserAdmin = await classController.checkUserAdmin(userID);
+  if (!isUserAdmin) {
+    response = getResponse(source, { permission: false });
+    options.reply_markup = null;
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  // saving '/delete' command to the db to know his request in the future
+  await requestController.updateRequest(userID, source);
+
+  response = getResponse(source, { confirm: true });
 
   bot.sendMessage(id, response, options);
 });
 
-// bot.onText(/^\/remove/, (msg) => {
-//   const { id } = msg.chat;
-// });
+bot.onText(/^\/leave$/, async (msg, [source]) => {
+  const { id } = msg.chat;
+  const userID = msg.from.id;
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+  };
+  let response;
 
-// bot.onText(/^\/note/, (msg) => {
-//   const { id } = msg.chat;
-// });
+  // deleting user from the users array in Class document
+  const classDoc = await classController.leaveClass(userID);
 
-// bot.onText(/^\/show/, (msg) => {
-//   const { id } = msg.chat;
-// });
+  const className = classDoc.name;
+  response = getResponse(source, { className });
 
-// bot.onText(/^\/schedule/, (msg) => {
-//   const { id } = msg.chat;
-// });
+  if (!classDoc) response = getResponse(source, { validErr: true });
 
-// bot.on("photo", (msg) => {
-//   const { id } = msg.chat;
-// });
+  bot.sendMessage(id, response, options);
+});
+
+bot.onText(/^\/class$/, async (msg, [source]) => {
+  const { id } = msg.chat;
+  const userID = msg.from.id;
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+  };
+  let response;
+
+  // retrieving class document from the db
+  const classDoc = await classController.findClass(userID);
+
+  // if there's no class with user in, send Error message
+  if (!classDoc) {
+    response = getResponse(source, { validErr: true });
+    return bot.sendMessage(id, response, options);
+  }
+
+  const [className, usersNum] = [classDoc.name, classDoc.users.length];
+
+  response = getResponse(source, { className, usersNum });
+
+  bot.sendMessage(id, response, options);
+});
+
+bot.onText(/^Back$/, async (msg) => {
+  await requestController.clearRequest(msg.from.id);
+});
+
+bot.onText(/^Delete сlass$/, async (msg) => {
+  const { id } = msg.chat;
+  const userID = msg.chat.id;
+  const source = "/delete";
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+  };
+
+  // checking is user made a request
+  const request = await requestController.checkRequest(userID);
+  if (request !== "/delete") return;
+
+  // deleting class document and clearing user request
+  const classDoc = await classController.deleteClass(userID);
+  await requestController.clearRequest(userID);
+
+  const [className] = [classDoc.name];
+
+  response = getResponse(source, { className });
+
+  bot.sendMessage(id, response, options);
+});
