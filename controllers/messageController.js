@@ -21,10 +21,10 @@ module.exports = (type, options) => {
       break;
     case "/delete":
       response = `Class has been successfully deleted!\n\nName: ${options.className}`;
-      if (options.validErr)
-        response = "<b>ERROR: you are not in any class </b>";
       if (options.confirm)
         response = `Are you sure you want to delete class? All subjects and homework will be deleted permanently`;
+      if (options.validErr)
+        response = "<b>ERROR: you are not in any class </b>";
       if (options.permission === false)
         response =
           "<b>ERROR: you don't have permission to delete the class</b>";
@@ -38,6 +38,17 @@ module.exports = (type, options) => {
       response = `Your class info:\n\nName: ${options.className}\nNumber of users: ${options.usersNum}`;
       if (options.validErr)
         response = "<b>ERROR: you are not in any class </b>";
+      break;
+    case "/invite":
+      response = `User has entered the class!`;
+      if (options.confirm)
+        response =
+          "Please send me ID of the user\nUser can get it with this command /getid\n\nExample:\n123456789";
+      if (options.validErr)
+        response = "<b>ERROR: you are not in any class </b>";
+      if (options.permission === false)
+        response =
+          "<b>ERROR: you don't have permission to invite to the class</b>";
       break;
   }
 

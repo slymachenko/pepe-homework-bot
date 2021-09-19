@@ -18,7 +18,7 @@ exports.deleteClass = async (userID) => {
   try {
     // retrieving class document with userID in
     const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
-    if (!classDoc) return false; // if there's no class with user in return false
+    if (!classDoc) return false;
 
     await Class.deleteOne({ users: { $elemMatch: { userID } } });
     await Homework.deleteOne({ classID: classDoc._id });
@@ -34,7 +34,7 @@ exports.leaveClass = async (userID) => {
   try {
     // retrieving class document with userID in
     const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
-    if (!classDoc) return false; // if there's no class with user in return false
+    if (!classDoc) return false;
 
     // deleting object that contains userID from the users array
     classDoc.users.forEach((el, i) => {
@@ -55,6 +55,23 @@ exports.findClass = async (userID) => {
     // retrieving class document with userID in
     const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
     if (!classDoc) return false; // if there's no class with user in return false
+
+    return classDoc;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+// returns class document if user successfully added. If not returns false
+exports.addUsertoClass = async (userID, inviteUserID) => {
+  try {
+    const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+    if (!classDoc) return false;
+
+    // adding to users array object that contains userID
+    classDoc.users.push({ userID: inviteUserID, isAdmin: false, request: "" });
+
+    await classDoc.save();
 
     return classDoc;
   } catch (err) {

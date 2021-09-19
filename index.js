@@ -129,7 +129,7 @@ bot.onText(/^\/delete$/, async (msg, [source]) => {
     return bot.sendMessage(id, response, options);
   }
 
-  // saving '/delete' command to the db to know his request in the future
+  // saving '/delete' command to the db to know users request in the future
   await requestController.updateRequest(userID, source);
 
   response = getResponse(source, { confirm: true });
@@ -182,13 +182,46 @@ bot.onText(/^\/class$/, async (msg, [source]) => {
   bot.sendMessage(id, response, options);
 });
 
+bot.onText(/^\/invite$/, async (msg, [source]) => {
+  const { id } = msg.chat;
+  const userID = msg.from.id;
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+  };
+  let response;
+
+  // checking is user is memeber of the class
+  const isUserinClass = await classController.checkUserinClass(userID);
+  if (!isUserinClass) {
+    response = getResponse(source, { validErr: true });
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  // checking is user Admin
+  const isUserAdmin = await classController.checkUserAdmin(userID);
+  if (!isUserAdmin) {
+    response = getResponse(source, { permission: false });
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  // saving '/invite' command to the db to know users request in the future
+  await requestController.updateRequest(userID, source);
+
+  response = getResponse(source, { confirm: true });
+
+  bot.sendMessage(id, response, options);
+});
+
 bot.onText(/^Back$/, async (msg) => {
   await requestController.clearRequest(msg.from.id);
 });
 
 bot.onText(/^Delete сlass$/, async (msg) => {
   const { id } = msg.chat;
-  const userID = msg.chat.id;
+  const userID = msg.from.id;
   const source = "/delete";
   const options = {
     parse_mode: "HTML",
@@ -206,6 +239,28 @@ bot.onText(/^Delete сlass$/, async (msg) => {
   const [className] = [classDoc.name];
 
   response = getResponse(source, { className });
+
+  bot.sendMessage(id, response, options);
+});
+
+bot.onText(/^\d{9,9}$/, async (msg) => {
+  const { id } = msg.chat;
+  const userID = msg.from.id;
+  const inviteUserID = msg.text;
+  const source = "/invite";
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+  };
+
+  // checking is user made a request
+  const request = await requestController.checkRequest(userID);
+  if (request !== "/invite") return;
+
+  // adding user to the class object
+  await classController.addUsertoClass(userID, inviteUserID);
+
+  response = getResponse(source, {});
 
   bot.sendMessage(id, response, options);
 });
