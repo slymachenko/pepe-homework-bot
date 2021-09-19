@@ -10,8 +10,8 @@ const usersSchema = new mongoose.Schema({
     default: false,
   },
   request: {
-    type: String,
-    default: "",
+    type: [String],
+    default: [],
   },
 });
 

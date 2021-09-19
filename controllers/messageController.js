@@ -62,6 +62,18 @@ module.exports = (type, options) => {
       if (options.permission === false)
         response = "<b>ERROR: you don't have permission to promote users</b>";
       break;
+    case "/add":
+      response = `${options.subjectName} has been added on ${options.day} as a ${options.subjectIndex} class!`;
+      if (options.confirm)
+        response = [
+          "Please select the day of the week to which you want to add the subject",
+          "Please send me index number and name of the subject\nIndex number must be in the range 1-12\n\nExample:\n3 Electrical engineering - this message will add Electrical engineering the 3-rd class",
+        ];
+      if (options.validErr)
+        response = "<b>ERROR: you are not in any class </b>";
+      if (options.permission === false)
+        response = "<b>ERROR: you don't have permission to add subjects</b>";
+      break;
   }
 
   return response;

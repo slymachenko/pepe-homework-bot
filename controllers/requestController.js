@@ -8,7 +8,7 @@ exports.updateRequest = async (userID, req) => {
 
     // adding request to the user object
     classDoc.users.forEach((el) => {
-      if (el.userID === userID) return (el.request = req);
+      if (el.userID === userID) return el.request.push(req);
     });
 
     await classDoc.save();
@@ -27,7 +27,7 @@ exports.clearRequest = async (userID) => {
 
     // clearing request in the user object
     classDoc.users.forEach((el) => {
-      if (el.userID === userID) return (el.request = "");
+      if (el.userID === userID) return (el.request = []);
     });
 
     await classDoc.save();
@@ -38,7 +38,7 @@ exports.clearRequest = async (userID) => {
   }
 };
 
-exports.checkRequest = async (userID) => {
+exports.getRequest = async (userID) => {
   try {
     // retrieving class document with userID in
     const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
@@ -50,7 +50,7 @@ exports.checkRequest = async (userID) => {
       if (el.userID === userID) request = el.request;
     });
 
-    if (request === "") return false;
+    if (request.length === 0) return false;
 
     return request;
   } catch (err) {
