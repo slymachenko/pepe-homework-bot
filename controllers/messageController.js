@@ -67,10 +67,28 @@ module.exports = (type, options) => {
       if (options.confirm)
         response = [
           "Please select the day of the week to which you want to add the subject",
-          "Please send me index number and name of the subject\nIndex number must be in the range 1-12\n\nExample:\n3 Electrical engineering - this message will add Electrical engineering the 3-rd class",
+          "Please send me index number and name of the subject\nIndex number must be in the range 1-12\n\nExample:\n3 Electrical engineering - this message will add Electrical engineering as the 3-rd class",
         ];
       if (options.validErr)
-        response = "<b>ERROR: you are not in any class </b>";
+        response = [
+          "<b>ERROR: you are not in any class </b>",
+          `<b>ERROR: there's a subject with the ${options.subjectIndex} index\nRemove the subject with the ${options.subjectIndex} index and try again</b>`,
+        ];
+      if (options.permission === false)
+        response = "<b>ERROR: you don't have permission to add subjects</b>";
+      break;
+    case "/remove":
+      response = `${options.subjectName} has been removed from ${options.day}\n${options.subjectName} was a ${options.subjectIndex} class!`;
+      if (options.confirm)
+        response = [
+          "Please select the day of the week from which you want to remove the subject",
+          "Please send me index number and name of the subject\nIndex number must be in the range 1-12\n\nExample:\n3 Electrical engineering - this message will remove Electrical engineering",
+        ];
+      if (options.validErr)
+        response = [
+          "<b>ERROR: you are not in any class </b>",
+          `<b>ERROR: the ${options.subjectIndex} class is not ${options.subjectName}\nCheck your /schedule and try again</b>`,
+        ];
       if (options.permission === false)
         response = "<b>ERROR: you don't have permission to add subjects</b>";
       break;
