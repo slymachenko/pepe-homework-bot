@@ -215,6 +215,39 @@ bot.onText(/^\/invite$/, async (msg, [source]) => {
   bot.sendMessage(id, response, options);
 });
 
+bot.onText(/^\/promote$/, async (msg, [source]) => {
+  const { id } = msg.chat;
+  const userID = msg.from.id;
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+  };
+  let response;
+
+  // checking user is memeber of the class
+  const isUserinClass = await classController.checkUserinClass(userID);
+  if (!isUserinClass) {
+    response = getResponse(source, { validErr: true });
+
+    return bot.sendMessage(id, response[0], options);
+  }
+
+  // checking user Admin
+  const isUserAdmin = await classController.checkUserAdmin(userID);
+  if (!isUserAdmin) {
+    response = getResponse(source, { permission: false });
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  // saving '/promote' command to the db to know users request in the future
+  await requestController.updateRequest(userID, source);
+
+  response = getResponse(source, { confirm: true });
+
+  bot.sendMessage(id, response, options);
+});
+
 bot.onText(/^Back$/, async (msg) => {
   await requestController.clearRequest(msg.from.id);
 });
@@ -246,21 +279,40 @@ bot.onText(/^Delete сlass$/, async (msg) => {
 bot.onText(/^\d{9,9}$/, async (msg) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
-  const inviteUserID = msg.text;
-  const source = "/invite";
+  const secUserID = msg.text;
   const options = {
     parse_mode: "HTML",
     disable_notification: true,
   };
 
-  // checking is user made a request
+  // checking if user made a request
   const request = await requestController.checkRequest(userID);
-  if (request !== "/invite") return;
+  if (request === "/invite") {
+    const source = "/invite";
+    // adding user to the class object
+    await classController.addUsertoClass(userID, secUserID);
 
-  // adding user to the class object
-  await classController.addUsertoClass(userID, inviteUserID);
+    response = getResponse(source, {});
 
-  response = getResponse(source, {});
+    return bot.sendMessage(id, response, options);
+  }
+  if (request === "/promote") {
+    const source = "/promote";
 
-  bot.sendMessage(id, response, options);
+    // adding user to the class object
+    const isUsersInTheSameClass = await classController.promoteUser(
+      userID,
+      secUserID
+    );
+
+    if (!isUsersInTheSameClass) {
+      response = getResponse(source, { validErr: true });
+
+      return bot.sendMessage(id, response[1], options);
+    }
+
+    response = getResponse(source, {});
+
+    return bot.sendMessage(id, response, options);
+  }
 });

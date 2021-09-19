@@ -47,8 +47,20 @@ module.exports = (type, options) => {
       if (options.validErr)
         response = "<b>ERROR: you are not in any class </b>";
       if (options.permission === false)
+        response = "<b>ERROR: you don't have permission to invite users</b>";
+      break;
+    case "/promote":
+      response = `User has been promoted!`;
+      if (options.confirm)
         response =
-          "<b>ERROR: you don't have permission to invite to the class</b>";
+          "Please send me ID of the user\nUser can get it with this command /getid\n\nExample:\n123456789";
+      if (options.validErr)
+        response = [
+          "<b>ERROR: you are not in any class </b>",
+          "<b>ERROR: user is not in the class </b>",
+        ];
+      if (options.permission === false)
+        response = "<b>ERROR: you don't have permission to promote users</b>";
       break;
   }
 

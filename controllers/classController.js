@@ -79,6 +79,29 @@ exports.addUsertoClass = async (userID, inviteUserID) => {
   }
 };
 
+// returns class document if user successfully promoted. If not returns false
+exports.promoteUser = async (userID, promoteUserID) => {
+  try {
+    const classDoc = await Class.findOne({
+      "users.userID": {
+        $all: [userID, promoteUserID],
+      },
+    });
+    if (!classDoc) return false;
+
+    // setting isAdmin of the user object to true
+    classDoc.users.forEach((el) => {
+      if (el.userID == promoteUserID) return (el.isAdmin = true);
+    });
+
+    await classDoc.save();
+
+    return classDoc;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 // returns true if findes class document with userID
 exports.checkUserinClass = async (userID) => {
   try {
