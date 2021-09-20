@@ -335,8 +335,70 @@ bot.onText(/^\/remove$/, async (msg, [source]) => {
   bot.sendMessage(id, response, options);
 });
 
-bot.onText(/^Back$/, async (msg) => {
-  await requestController.clearRequest(msg.from.id);
+bot.onText(/^\/note$/, async (msg, [source]) => {
+  const { id } = msg.chat;
+  const userID = msg.from.id;
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+    reply_markup: {
+      keyboard: [
+        ["Monday", "Tuesday", "Wednesday"],
+        ["Thursday", "Friday"],
+        ["Back"],
+      ],
+      one_time_keyboard: true,
+    },
+  };
+  let response;
+
+  // check if the user is a member of the class
+  const isUserinClass = await classController.checkUserinClass(userID);
+  if (!isUserinClass) {
+    response = getResponse(source, { validErr: true })[0];
+    options.reply_markup = null;
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  // check if the user is an admin
+  const isUserAdmin = await classController.checkUserAdmin(userID);
+  if (!isUserAdmin) {
+    response = getResponse(source, { permission: false });
+    options.reply_markup = null;
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  // saving '/note' command to the db to know users request in the future
+  await requestController.updateRequest(userID, source);
+
+  response = getResponse(source, { confirm: true })[0];
+
+  bot.sendMessage(id, response, options);
+});
+
+bot.onText(/^Back$/, async (msg, [source]) => {
+  const { id } = msg.chat;
+  const userID = msg.from.id;
+  const userName = msg.from.first_name;
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+    reply_markup: {
+      hide_keyboard: true,
+    },
+  };
+
+  await requestController.clearRequest(userID);
+
+  const response = getResponse(source, { userName });
+
+  bot.sendMessage(
+    id,
+    response[Math.floor(Math.random() * response.length)],
+    options
+  );
 });
 
 bot.onText(/^Delete сlass$/, async (msg) => {
@@ -346,6 +408,9 @@ bot.onText(/^Delete сlass$/, async (msg) => {
   const options = {
     parse_mode: "HTML",
     disable_notification: true,
+    reply_markup: {
+      hide_keyboard: true,
+    },
   };
 
   // check if the user made a request
@@ -370,6 +435,9 @@ bot.onText(/^\d{9,9}$/, async (msg) => {
   const options = {
     parse_mode: "HTML",
     disable_notification: true,
+    reply_markup: {
+      hide_keyboard: true,
+    },
   };
 
   // check if the user made a request
@@ -426,20 +494,27 @@ bot.onText(
     const request = await requestController.getRequest(userID);
 
     if (!request) return;
-    if (!(request.includes("/add") || request.includes("/remove"))) return;
+    if (!request.some((item) => ["/add", "/remove", "/note"].includes(item)))
+      return;
     if (request.includes("/add")) source = "/add";
     if (request.includes("/remove")) source = "/remove";
+    if (request.includes("/note")) {
+      source = "/note";
+      options.reply_markup = {
+        keyboard: await homeworkController.getSubjectsButtons(userID, weekday),
+      };
+    }
 
     // saving weekday to the db to know users request in the future
     await requestController.updateRequest(userID, weekday);
 
-    const response = getResponse(source, { confirm: true })[1];
+    const response = getResponse(source, { confirm: true, day: weekday })[1];
 
     return bot.sendMessage(id, response, options);
   }
 );
 
-bot.onText(/^[1-9] [A-Za-zА-яа-я]|^1[0-2] [A-Za-zА-яа-я]/, async (msg) => {
+bot.onText(/^[1-9] [A-Za-zА-яа-я]|^10 [A-Za-zА-яа-я]/, async (msg) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
   const options = {
@@ -473,6 +548,7 @@ bot.onText(/^[1-9] [A-Za-zА-яа-я]|^1[0-2] [A-Za-zА-яа-я]/, async (msg) =
         validErr: true,
         subjectIndex,
         subjectName,
+        day,
       })[1];
 
       await requestController.clearRequest(userID);
@@ -523,29 +599,87 @@ bot.onText(/^[1-9] [A-Za-zА-яа-я]|^1[0-2] [A-Za-zА-яа-я]/, async (msg) =
   }
 });
 
-// bot.on("message", async (msg) => {
-//   const { id } = msg.chat;
-//   const userID = msg.from.id;
-//   const options = {
-//     parse_mode: "HTML",
-//     disable_notification: true,
-//     reply_markup: {
-//       hide_keyboard: true,
-//     },
-//   };
-//   let response;
+bot.on("message", async (msg) => {
+  const { id } = msg.chat;
+  const userID = msg.from.id;
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+    reply_markup: {
+      hide_keyboard: true,
+    },
+  };
+  let response;
+  let source;
 
-//   if (
-//     msg.entities ||
-//     [
-//       "Monday",
-//       "Tuesday",
-//       "Wednesday",
-//       "Thursday",
-//       "Friday",
-//       "Back",
-//       "Delete сlass",
-//     ].includes(msg.text)
-//   )
-//     return;
-// });
+  if (
+    msg.entities ||
+    [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Back",
+      "Delete сlass",
+    ].includes(msg.text)
+  )
+    return;
+
+  // check if the user made a request
+  const request = await requestController.getRequest(userID);
+  if (!request) return;
+
+  if (request.includes("/note")) {
+    const day = request[1];
+    source = "/note";
+
+    if (request.length === 2) {
+      // user message => SUBJECT
+      const subjectName = msg.text.split(".")[1];
+      console.log("SUBJECT");
+
+      const isSubjectinDay = await homeworkController.checkSubjectinDay(
+        userID,
+        day,
+        subjectName
+      );
+      if (!isSubjectinDay) {
+        response = getResponse(source, {
+          validErr: true,
+          subjectName,
+          day,
+        })[1];
+
+        await requestController.clearRequest(userID);
+
+        return bot.sendMessage(id, response, options);
+      }
+
+      // saving subject to the db to know users request in the future
+      await requestController.updateRequest(userID, subjectName);
+
+      response = getResponse(source, { confirm: true, subjectName, day })[2];
+
+      return bot.sendMessage(id, response, options);
+    }
+    if (request.length === 3) {
+      // user message => HOMEWORK
+      const homeworkText = msg.text;
+      const subjectName = request[2];
+
+      await homeworkController.addHomework(
+        userID,
+        day,
+        subjectName,
+        homeworkText
+      );
+
+      await requestController.clearRequest(userID);
+
+      response = getResponse(source, { subjectName, day });
+
+      return bot.sendMessage(id, response, options);
+    }
+  }
+});

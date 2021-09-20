@@ -4,6 +4,7 @@ const subjectSchema = new mongoose.Schema({
   subjectIndex: {
     type: Number,
     required: [true, "Please provide a subject index"],
+    unique: true,
     min: [1, "Subject index must be a number in the range 1-10"],
     max: [10, "Subject index must be a number in the range 1-10"],
   },

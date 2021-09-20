@@ -72,7 +72,7 @@ module.exports = (type, options) => {
       if (options.validErr)
         response = [
           "<b>ERROR: you are not in any class </b>",
-          `<b>ERROR: there's a subject with the ${options.subjectIndex} index\nRemove the subject with the ${options.subjectIndex} index and try again</b>`,
+          `<b>ERROR: there's a subject with the ${options.subjectIndex} index on ${options.day}\nRemove the subject with the ${options.subjectIndex} index and try again</b>`,
         ];
       if (options.permission === false)
         response = "<b>ERROR: you don't have permission to add subjects</b>";
@@ -91,6 +91,32 @@ module.exports = (type, options) => {
         ];
       if (options.permission === false)
         response = "<b>ERROR: you don't have permission to add subjects</b>";
+      break;
+    case "/note":
+      response = `homework has been added to the ${options.subjectName} on ${options.day}`;
+      if (options.confirm)
+        response = [
+          "Please select the day of the week to which you want to note homework",
+          `Please select the subject of the ${options.day} to which you want to note homework`,
+          `Please send me homework for the ${options.subjectName} on ${options.day}`,
+        ];
+      if (options.validErr)
+        response = [
+          "<b>ERROR: you are not in any class </b>",
+          `<b>ERROR: there's no ${options.subjectName} on ${options.day}</b>`,
+        ];
+      if (options.permission === false)
+        response = "<b>ERROR: you don't have permission to add subjects</b>";
+      break;
+    case "Back":
+      response = [
+        `I'm waiting for your orders, ${options.userName}`,
+        "If you need me, you know where to find me",
+        "<b>Joke Time</b>\nWhat's the advantage of living in Switzerland?\nWell, the flag is a big plus.",
+        "<b>Joke Time</b>\nOne day my robot friend went to buy some camo pants but couldn’t find any",
+        "<b>Joke Time</b>\nWhat's is the robot's favorite kind of music?\nHeavy metal",
+        "<b>Joke Time</b>\nThat's my favorite one:\n00110010 00101011 00110010 00111101 00110101\n😂🤣🤣😂🤣😂",
+      ];
       break;
   }
 

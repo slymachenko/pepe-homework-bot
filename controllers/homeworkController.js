@@ -1,6 +1,19 @@
 const Class = require("../models/classModel");
 const Homework = require("../models/homeworkModel");
 
+const getDay = async (userID, day) => {
+  try {
+    // retrieving class document with userID in
+    const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+    if (!classDoc) return false;
+    const homeworkDoc = await Homework.findOne({ classID: classDoc._id });
+
+    return homeworkDoc.days[day];
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 // returns homework document if succeed. If not returns false
 exports.createSubject = async (userID, subject) => {
   try {
@@ -15,7 +28,6 @@ exports.createSubject = async (userID, subject) => {
       if (el.subjectIndex == subject.index) isIndexUnique = false;
     });
 
-    console.log(homeworkDoc.days[subject.day]);
     if (!isIndexUnique) return false;
 
     homeworkDoc.days[subject.day].push({
@@ -58,6 +70,62 @@ exports.deleteSubject = async (userID, subject) => {
 
     homeworkDoc.save();
     return homeworkDoc;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+exports.getSubjectsButtons = async (userID, day) => {
+  try {
+    const dayDoc = await getDay(userID, day);
+
+    const subjectsArr = [[], [], [], []];
+
+    dayDoc.forEach((el, i) => {
+      //   if ([0, 4, 6, 9].includes(i)) subjectsArr.push([]);
+      if (i <= 2) subjectsArr[0].push(`${el.subjectIndex}.${el.subject}`);
+      if (i > 2 && i <= 5)
+        subjectsArr[1].push(`${el.subjectIndex}.${el.subject}`);
+      if (i > 5 && i <= 8)
+        subjectsArr[2].push(`${el.subjectIndex}.${el.subject}`);
+      if (i > 8) subjectsArr[3].push(`${el.subjectIndex}.${el.subject}`);
+    });
+
+    subjectsArr.push(["Back"]);
+
+    return subjectsArr;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+exports.checkSubjectinDay = async (userID, day, subject) => {
+  const dayDoc = await getDay(userID, day);
+  let isSubjectinDay = false;
+
+  dayDoc.forEach((el) => {
+    if (el.subject === subject) isSubjectinDay = true;
+  });
+
+  return isSubjectinDay;
+};
+
+exports.addHomework = async (userID, day, subject, homework) => {
+  try {
+    // retrieving class document with userID in
+    const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+    if (!classDoc) return false;
+    const homeworkDoc = await Homework.findOne({ classID: classDoc._id });
+    const dayDoc = homeworkDoc.days[day];
+
+    dayDoc.forEach((el) => {
+      if (el.subject === subject) {
+        el.text = homework;
+      }
+    });
+
+    homeworkDoc.save();
+    return true;
   } catch (err) {
     console.error(err);
   }
