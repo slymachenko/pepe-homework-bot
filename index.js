@@ -6,6 +6,7 @@ const getResponse = require("./controllers/messageController");
 const classController = require("./controllers/classController");
 const requestController = require("./controllers/requestController");
 const homeworkController = require("./controllers/homeworkController");
+const userController = require("./controllers/userController");
 
 dotenv.config({ path: "./config.env" });
 
@@ -33,18 +34,26 @@ console.log("Bot have been started...");
 bot.onText(/^\/start$/, (msg, [source]) => {
   const { id } = msg.chat;
   const userName = msg.from.first_name;
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+  };
 
   const response = getResponse(source, { userName });
 
-  bot.sendMessage(id, response);
+  bot.sendMessage(id, response, options);
 });
 
 bot.onText(/^\/help$/, (msg, [source]) => {
   const { id } = msg.chat;
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+  };
 
   const response = getResponse(source);
 
-  bot.sendMessage(id, response);
+  bot.sendMessage(id, response, options);
 });
 
 bot.onText(/^\/getid$/, (msg, [source]) => {
@@ -67,17 +76,17 @@ bot.onText(/^\/create/, async (msg) => {
 
   const [source, className, ...text] = msg.text.split(" ");
 
-  // check if the user is a member of the class
-  const isUserinClass = await classController.checkUserinClass(userID);
-  if (isUserinClass) {
-    response = getResponse(source, { validErr: true });
+  // user message validation
+  if (!className || text.length > 0) {
+    response = getResponse(source, {}).msgErr;
 
     return bot.sendMessage(id, response, options);
   }
 
-  // user message validation
-  if (!className || text.length > 0) {
-    response = getResponse(source, { err: true });
+  // check if the user is a member of the class - send an error message
+  const isUserinClass = await userController.checkUserinClass(userID);
+  if (isUserinClass) {
+    response = getResponse(source, { validErr: true }).classErr;
 
     return bot.sendMessage(id, response, options);
   }
@@ -94,51 +103,52 @@ bot.onText(/^\/create/, async (msg) => {
     ],
   });
 
-  response = getResponse(source, { className });
+  response = getResponse(source, { className }).success;
 
   await bot.sendMessage(id, response, options);
 });
 
-bot.onText(/^\/delete$/, async (msg, [source]) => {
+bot.onText(/^\/deleteClass$/, async (msg, [source]) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
   const options = {
     parse_mode: "HTML",
     disable_notification: true,
     reply_markup: {
-      keyboard: [["Back", "Delete сlass"]],
-      one_time_keyboard: true,
+      hide_keyboard: true,
     },
   };
   let response;
 
   // check if the user is a member of the class
-  const isUserinClass = await classController.checkUserinClass(userID);
+  const isUserinClass = await userController.checkUserinClass(userID);
   if (!isUserinClass) {
-    response = getResponse(source, { validErr: true });
-    options.reply_markup = null;
+    response = getResponse(source, {}).classErr;
 
     return bot.sendMessage(id, response, options);
   }
 
   // check if the user is an admin
-  const isUserAdmin = await classController.checkUserAdmin(userID);
+  const isUserAdmin = await userController.checkUserAdmin(userID);
   if (!isUserAdmin) {
-    response = getResponse(source, { permission: false });
-    options.reply_markup = null;
+    response = getResponse(source, {}).permissionErr;
 
     return bot.sendMessage(id, response, options);
   }
 
-  // saving '/delete' command to the db to know users request in the future
+  // saving '/deleteClass' command to the db to know users request in the future
   await requestController.updateRequest(userID, source);
 
-  response = getResponse(source, { confirm: true });
+  options.reply_markup = {
+    keyboard: [["Back", "Delete сlass"]],
+    one_time_keyboard: true,
+  };
+  response = getResponse(source, {}).confirm;
 
   bot.sendMessage(id, response, options);
 });
 
-bot.onText(/^\/leave$/, async (msg, [source]) => {
+bot.onText(/^\/leaveClass$/, async (msg, [source]) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
   const options = {
@@ -151,14 +161,14 @@ bot.onText(/^\/leave$/, async (msg, [source]) => {
   const classDoc = await classController.leaveClass(userID);
 
   const className = classDoc.name;
-  response = getResponse(source, { className });
+  response = getResponse(source, { className }).success;
 
-  if (!classDoc) response = getResponse(source, { validErr: true });
+  if (!classDoc) response = getResponse(source, {}).classErr;
 
   bot.sendMessage(id, response, options);
 });
 
-bot.onText(/^\/class$/, async (msg, [source]) => {
+bot.onText(/^\/classInfo$/, async (msg, [source]) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
   const options = {
@@ -172,165 +182,179 @@ bot.onText(/^\/class$/, async (msg, [source]) => {
 
   // if there's no class with user in, send Error message
   if (!classDoc) {
-    response = getResponse(source, { validErr: true });
+    response = getResponse(source, {}).classErr;
     return bot.sendMessage(id, response, options);
   }
 
   const [className, usersNum] = [classDoc.name, classDoc.users.length];
 
-  response = getResponse(source, { className, usersNum });
+  response = getResponse(source, { className, usersNum }).success;
 
   bot.sendMessage(id, response, options);
 });
 
-bot.onText(/^\/invite$/, async (msg, [source]) => {
-  const { id } = msg.chat;
-  const userID = msg.from.id;
-  const options = {
-    parse_mode: "HTML",
-    disable_notification: true,
-  };
-  let response;
-
-  // check if the user is a member of the class
-  const isUserinClass = await classController.checkUserinClass(userID);
-  if (!isUserinClass) {
-    response = getResponse(source, { validErr: true });
-
-    return bot.sendMessage(id, response, options);
-  }
-
-  // check if the user is an admin
-  const isUserAdmin = await classController.checkUserAdmin(userID);
-  if (!isUserAdmin) {
-    response = getResponse(source, { permission: false });
-
-    return bot.sendMessage(id, response, options);
-  }
-
-  // saving '/invite' command to the db to know users request in the future
-  await requestController.updateRequest(userID, source);
-
-  response = getResponse(source, { confirm: true });
-
-  bot.sendMessage(id, response, options);
-});
-
-bot.onText(/^\/promote$/, async (msg, [source]) => {
-  const { id } = msg.chat;
-  const userID = msg.from.id;
-  const options = {
-    parse_mode: "HTML",
-    disable_notification: true,
-  };
-  let response;
-
-  // check if the user is a member of the class
-  const isUserinClass = await classController.checkUserinClass(userID);
-  if (!isUserinClass) {
-    response = getResponse(source, { validErr: true })[0];
-
-    return bot.sendMessage(id, response, options);
-  }
-
-  // check if the user is an admin
-  const isUserAdmin = await classController.checkUserAdmin(userID);
-  if (!isUserAdmin) {
-    response = getResponse(source, { permission: false });
-
-    return bot.sendMessage(id, response, options);
-  }
-
-  // saving '/promote' command to the db to know users request in the future
-  await requestController.updateRequest(userID, source);
-
-  response = getResponse(source, { confirm: true });
-
-  bot.sendMessage(id, response, options);
-});
-
-bot.onText(/^\/add$/, async (msg, [source]) => {
+bot.onText(/^\/inviteUser$/, async (msg, [source]) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
   const options = {
     parse_mode: "HTML",
     disable_notification: true,
     reply_markup: {
-      keyboard: [
-        ["Monday", "Tuesday", "Wednesday"],
-        ["Thursday", "Friday"],
-        ["Back"],
-      ],
-      one_time_keyboard: true,
+      hide_keyboard: true,
     },
   };
   let response;
 
   // check if the user is a member of the class
-  const isUserinClass = await classController.checkUserinClass(userID);
+  const isUserinClass = await userController.checkUserinClass(userID);
   if (!isUserinClass) {
-    response = getResponse(source, { validErr: true })[0];
-    options.reply_markup = null;
+    response = getResponse(source, {}).classErr;
 
     return bot.sendMessage(id, response, options);
   }
 
   // check if the user is an admin
-  const isUserAdmin = await classController.checkUserAdmin(userID);
+  const isUserAdmin = await userController.checkUserAdmin(userID);
   if (!isUserAdmin) {
-    response = getResponse(source, { permission: false });
-    options.reply_markup = null;
+    response = getResponse(source, {}).permissionErr;
 
     return bot.sendMessage(id, response, options);
   }
 
-  // saving '/add' command to the db to know users request in the future
+  // saving '/inviteUser' command to the db to know users request in the future
   await requestController.updateRequest(userID, source);
 
-  response = getResponse(source, { confirm: true })[0];
+  options.reply_markup = {
+    inline_keyboard: [[{ text: "Back", callback_data: "Back" }]],
+  };
+  response = getResponse(source, {}).sendMessage;
 
   bot.sendMessage(id, response, options);
 });
 
-bot.onText(/^\/remove$/, async (msg, [source]) => {
+bot.onText(/^\/promoteUser$/, async (msg, [source]) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
   const options = {
     parse_mode: "HTML",
     disable_notification: true,
     reply_markup: {
-      keyboard: [
-        ["Monday", "Tuesday", "Wednesday"],
-        ["Thursday", "Friday"],
-        ["Back"],
-      ],
-      one_time_keyboard: true,
+      hide_keyboard: true,
     },
   };
   let response;
 
   // check if the user is a member of the class
-  const isUserinClass = await classController.checkUserinClass(userID);
+  const isUserinClass = await userController.checkUserinClass(userID);
   if (!isUserinClass) {
-    response = getResponse(source, { validErr: true })[0];
-    options.reply_markup = null;
+    response = getResponse(source, {}).classErr;
 
     return bot.sendMessage(id, response, options);
   }
 
   // check if the user is an admin
-  const isUserAdmin = await classController.checkUserAdmin(userID);
+  const isUserAdmin = await userController.checkUserAdmin(userID);
   if (!isUserAdmin) {
-    response = getResponse(source, { permission: false });
-    options.reply_markup = null;
+    response = getResponse(source, {}).permissionErr;
 
     return bot.sendMessage(id, response, options);
   }
 
-  // saving '/remove' command to the db to know users request in the future
+  // saving '/promoteUser' command to the db to know users request in the future
   await requestController.updateRequest(userID, source);
 
-  response = getResponse(source, { confirm: true })[0];
+  options.reply_markup = {
+    inline_keyboard: [[{ text: "Back", callback_data: "Back" }]],
+  };
+  response = getResponse(source, {}).sendMessage;
+
+  bot.sendMessage(id, response, options);
+});
+
+bot.onText(/^\/addSubject$/, async (msg, [source]) => {
+  const { id } = msg.chat;
+  const userID = msg.from.id;
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+    reply_markup: {
+      hide_keyboard: true,
+    },
+  };
+  let response;
+
+  // check if the user is a member of the class
+  const isUserinClass = await userController.checkUserinClass(userID);
+  if (!isUserinClass) {
+    response = getResponse(source, {}).classErr;
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  // check if the user is an admin
+  const isUserAdmin = await userController.checkUserAdmin(userID);
+  if (!isUserAdmin) {
+    response = getResponse(source, {}).permissionErr;
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  // saving '/addSubject' command to the db to know users request in the future
+  await requestController.updateRequest(userID, source);
+
+  options.reply_markup = {
+    keyboard: [
+      ["Monday", "Tuesday", "Wednesday"],
+      ["Thursday", "Friday"],
+      ["Back"],
+    ],
+    one_time_keyboard: true,
+  };
+  response = getResponse(source, {}).selectDay;
+
+  bot.sendMessage(id, response, options);
+});
+
+bot.onText(/^\/removeSubject$/, async (msg, [source]) => {
+  const { id } = msg.chat;
+  const userID = msg.from.id;
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+    reply_markup: {
+      hide_keyboard: true,
+    },
+  };
+  let response;
+
+  // check if the user is a member of the class
+  const isUserinClass = await userController.checkUserinClass(userID);
+  if (!isUserinClass) {
+    response = getResponse(source, {}).classErr;
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  // check if the user is an admin
+  const isUserAdmin = await userController.checkUserAdmin(userID);
+  if (!isUserAdmin) {
+    response = getResponse(source, {}).permissionErr;
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  // saving '/removeSubject' command to the db to know users request in the future
+  await requestController.updateRequest(userID, source);
+
+  options.reply_markup = {
+    keyboard: [
+      ["Monday", "Tuesday", "Wednesday"],
+      ["Thursday", "Friday"],
+      ["Back"],
+    ],
+    one_time_keyboard: true,
+  };
+  response = getResponse(source, {}).selectDay;
 
   bot.sendMessage(id, response, options);
 });
@@ -342,30 +366,23 @@ bot.onText(/^\/note$/, async (msg, [source]) => {
     parse_mode: "HTML",
     disable_notification: true,
     reply_markup: {
-      keyboard: [
-        ["Monday", "Tuesday", "Wednesday"],
-        ["Thursday", "Friday"],
-        ["Back"],
-      ],
-      one_time_keyboard: true,
+      hide_keyboard: true,
     },
   };
   let response;
 
   // check if the user is a member of the class
-  const isUserinClass = await classController.checkUserinClass(userID);
+  const isUserinClass = await userController.checkUserinClass(userID);
   if (!isUserinClass) {
-    response = getResponse(source, { validErr: true })[0];
-    options.reply_markup = null;
+    response = getResponse(source, {}).classErr;
 
     return bot.sendMessage(id, response, options);
   }
 
   // check if the user is an admin
-  const isUserAdmin = await classController.checkUserAdmin(userID);
+  const isUserAdmin = await userController.checkUserAdmin(userID);
   if (!isUserAdmin) {
-    response = getResponse(source, { permission: false });
-    options.reply_markup = null;
+    response = getResponse(source, {}).permissionErr;
 
     return bot.sendMessage(id, response, options);
   }
@@ -373,15 +390,24 @@ bot.onText(/^\/note$/, async (msg, [source]) => {
   // saving '/note' command to the db to know users request in the future
   await requestController.updateRequest(userID, source);
 
-  response = getResponse(source, { confirm: true })[0];
+  options.reply_markup = {
+    keyboard: [
+      ["Monday", "Tuesday", "Wednesday"],
+      ["Thursday", "Friday"],
+      ["Back"],
+    ],
+    one_time_keyboard: true,
+  };
+  response = getResponse(source, {}).selectDay;
 
   bot.sendMessage(id, response, options);
 });
 
-bot.onText(/^Back$/, async (msg, [source]) => {
+bot.onText(/^Back$|^back$/, async (msg) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
   const userName = msg.from.first_name;
+  const source = "Back";
   const options = {
     parse_mode: "HTML",
     disable_notification: true,
@@ -404,7 +430,7 @@ bot.onText(/^Back$/, async (msg, [source]) => {
 bot.onText(/^Delete сlass$/, async (msg) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
-  const source = "/delete";
+  const source = "/deleteClass";
   const options = {
     parse_mode: "HTML",
     disable_notification: true,
@@ -415,7 +441,7 @@ bot.onText(/^Delete сlass$/, async (msg) => {
 
   // check if the user made a request
   const request = await requestController.getRequest(userID);
-  if (!request.includes("/delete")) return;
+  if (!request.includes("/deleteClass")) return;
 
   // deleting class document and clearing user request
   const classDoc = await classController.deleteClass(userID);
@@ -423,7 +449,7 @@ bot.onText(/^Delete сlass$/, async (msg) => {
 
   const [className] = [classDoc.name];
 
-  response = getResponse(source, { className });
+  response = getResponse(source, { className }).success;
 
   bot.sendMessage(id, response, options);
 });
@@ -442,10 +468,10 @@ bot.onText(/^\d{9,9}$/, async (msg) => {
 
   // check if the user made a request
   const request = await requestController.getRequest(userID);
-  if (request.includes("/invite")) {
-    const source = "/invite";
+  if (request.includes("/inviteUser")) {
+    const source = "/inviteUser";
     // adding user to the class object
-    await classController.addUsertoClass(userID, secUserID);
+    await userController.addUsertoClass(userID, secUserID);
 
     await requestController.clearRequest(userID);
 
@@ -453,24 +479,24 @@ bot.onText(/^\d{9,9}$/, async (msg) => {
 
     return bot.sendMessage(id, response, options);
   }
-  if (request.includes("/promote")) {
-    const source = "/promote";
+  if (request.includes("/promoteUser")) {
+    const source = "/promoteUser";
 
     // adding user to the class object
-    const isUsersInTheSameClass = await classController.promoteUser(
+    const isUsersInTheSameClass = await userController.promoteUser(
       userID,
       secUserID
     );
 
     if (!isUsersInTheSameClass) {
-      response = getResponse(source, { validErr: true })[1];
+      response = getResponse(source, {}).userClassErr;
 
       return bot.sendMessage(id, response, options);
     }
 
     await requestController.clearRequest(userID);
 
-    response = getResponse(source, {});
+    response = getResponse(source, {}).success;
 
     return bot.sendMessage(id, response, options);
   }
@@ -494,10 +520,24 @@ bot.onText(
     const request = await requestController.getRequest(userID);
 
     if (!request) return;
-    if (!request.some((item) => ["/add", "/remove", "/note"].includes(item)))
+    if (
+      !request.some((item) =>
+        ["/addSubject", "/removeSubject", "/note"].includes(item)
+      )
+    )
       return;
-    if (request.includes("/add")) source = "/add";
-    if (request.includes("/remove")) source = "/remove";
+    if (request.includes("/addSubject")) {
+      source = "/addSubject";
+      options.reply_markup = {
+        inline_keyboard: [[{ text: "Back", callback_data: "Back" }]],
+      };
+    }
+    if (request.includes("/removeSubject")) {
+      source = "/removeSubject";
+      options.reply_markup = {
+        keyboard: await homeworkController.getSubjectsButtons(userID, weekday),
+      };
+    }
     if (request.includes("/note")) {
       source = "/note";
       options.reply_markup = {
@@ -508,13 +548,15 @@ bot.onText(
     // saving weekday to the db to know users request in the future
     await requestController.updateRequest(userID, weekday);
 
-    const response = getResponse(source, { confirm: true, day: weekday })[1];
+    response = getResponse(source, { day: weekday }).sendMessage;
+    if (source === "/note")
+      response = getResponse(source, { day: weekday }).selectSubject;
 
     return bot.sendMessage(id, response, options);
   }
 );
 
-bot.onText(/^[1-9] [A-Za-zА-яа-я]|^10 [A-Za-zА-яа-я]/, async (msg) => {
+bot.onText(/^[1-9].[A-Za-zА-яа-я]|^10.[A-Za-zА-яа-я]/, async (msg) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
   const options = {
@@ -531,11 +573,11 @@ bot.onText(/^[1-9] [A-Za-zА-яа-я]|^10 [A-Za-zА-яа-я]/, async (msg) => {
   if (!request || request.length !== 2) return;
 
   const day = request[1];
-  const [subjectIndex, ...text] = msg.text.split(" ");
+  const [subjectIndex, ...text] = msg.text.split(".");
   const subjectName = text.join(" ");
 
-  if (request.includes("/add")) {
-    const source = "/add";
+  if (request.includes("/addSubject")) {
+    const source = "/addSubject";
 
     const homeworkDoc = await homeworkController.createSubject(userID, {
       index: subjectIndex,
@@ -545,11 +587,10 @@ bot.onText(/^[1-9] [A-Za-zА-яа-я]|^10 [A-Za-zА-яа-я]/, async (msg) => {
 
     if (!homeworkDoc) {
       response = getResponse(source, {
-        validErr: true,
         subjectIndex,
         subjectName,
         day,
-      })[1];
+      }).msgErr;
 
       await requestController.clearRequest(userID);
 
@@ -562,12 +603,12 @@ bot.onText(/^[1-9] [A-Za-zА-яа-я]|^10 [A-Za-zА-яа-я]/, async (msg) => {
       subjectIndex,
       subjectName,
       day,
-    });
+    }).success;
 
     return bot.sendMessage(id, response, options);
   }
-  if (request.includes("/remove")) {
-    const source = "/remove";
+  if (request.includes("/removeSubject")) {
+    const source = "/removeSubject";
 
     const homeworkDoc = await homeworkController.deleteSubject(userID, {
       name: subjectName,
@@ -577,10 +618,9 @@ bot.onText(/^[1-9] [A-Za-zА-яа-я]|^10 [A-Za-zА-яа-я]/, async (msg) => {
 
     if (!homeworkDoc) {
       response = getResponse(source, {
-        validErr: true,
         subjectIndex,
         subjectName,
-      })[1];
+      }).msgErr;
 
       await requestController.clearRequest(userID);
 
@@ -593,7 +633,7 @@ bot.onText(/^[1-9] [A-Za-zА-яа-я]|^10 [A-Za-zА-яа-я]/, async (msg) => {
       subjectIndex,
       subjectName,
       day,
-    });
+    }).success;
 
     return bot.sendMessage(id, response, options);
   }
@@ -637,6 +677,9 @@ bot.on("message", async (msg) => {
     if (request.length === 2) {
       // user message => SUBJECT
       const subjectName = msg.text.split(".")[1];
+      options.reply_markup = {
+        inline_keyboard: [[{ text: "Back", callback_data: "Back" }]],
+      };
       console.log("SUBJECT");
 
       const isSubjectinDay = await homeworkController.checkSubjectinDay(
@@ -649,7 +692,7 @@ bot.on("message", async (msg) => {
           validErr: true,
           subjectName,
           day,
-        })[1];
+        }).selectSubject;
 
         await requestController.clearRequest(userID);
 
@@ -659,7 +702,7 @@ bot.on("message", async (msg) => {
       // saving subject to the db to know users request in the future
       await requestController.updateRequest(userID, subjectName);
 
-      response = getResponse(source, { confirm: true, subjectName, day })[2];
+      response = getResponse(source, { subjectName, day }).sendMessage;
 
       return bot.sendMessage(id, response, options);
     }
@@ -677,9 +720,37 @@ bot.on("message", async (msg) => {
 
       await requestController.clearRequest(userID);
 
-      response = getResponse(source, { subjectName, day });
+      response = getResponse(source, { subjectName, day }).success;
 
       return bot.sendMessage(id, response, options);
     }
+  }
+});
+
+bot.on("callback_query", async (data) => {
+  const { id } = data.message.chat;
+  const userID = data.from.id;
+  const userName = data.from.first_name;
+  const callback_query_id = data.id;
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+    reply_markup: {
+      hide_keyboard: true,
+    },
+  };
+
+  if (data.data === "Back") {
+    await requestController.clearRequest(userID);
+
+    const response = getResponse(data.data, { userName });
+
+    bot.answerCallbackQuery(callback_query_id);
+
+    bot.sendMessage(
+      id,
+      response[Math.floor(Math.random() * response.length)],
+      options
+    );
   }
 });
