@@ -99,6 +99,15 @@ exports.getSubjectsButtons = async (userID, day) => {
   }
 };
 
+exports.checkDayhasSubjects = async (userID, day) => {
+  const dayDoc = await getDay(userID, day);
+  let isSubjectinDay = false;
+
+  if (dayDoc.length > 0) isSubjectinDay = true;
+
+  return isSubjectinDay;
+};
+
 exports.checkSubjectinDay = async (userID, day, subject) => {
   const dayDoc = await getDay(userID, day);
   let isSubjectinDay = false;
@@ -126,6 +135,49 @@ exports.addHomework = async (userID, day, subject, homework) => {
 
     homeworkDoc.save();
     return true;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+exports.getAllHomework = async (userID) => {
+  try {
+    // retrieving class document with userID in
+    const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+    if (!classDoc) return false;
+    const homeworkDoc = await Homework.findOne({ classID: classDoc._id });
+
+    return homeworkDoc.days;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+exports.getDayHomework = async (userID, day) => {
+  try {
+    // retrieving class document with userID in
+    const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+    if (!classDoc) return false;
+    const homeworkDoc = await Homework.findOne({ classID: classDoc._id });
+
+    return homeworkDoc.days[day];
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+exports.getSubjectHomework = async (userID, day, subjectIndex, subject) => {
+  try {
+    // retrieving class document with userID in
+    const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+    if (!classDoc) return false;
+    const homeworkDoc = await Homework.findOne({ classID: classDoc._id });
+
+    const subjIndex = homeworkDoc.days[day].findIndex((el) => {
+      return el.subject === subject && el.subjectIndex == subjectIndex;
+    });
+
+    return homeworkDoc.days[day][subjIndex];
   } catch (err) {
     console.error(err);
   }

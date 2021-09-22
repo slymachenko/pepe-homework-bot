@@ -22,7 +22,7 @@ module.exports = (source, options) => {
           "<b>ERROR: you are already in the class</b>\n\nTo create a new class you shouldn't be in any class",
       };
       break;
-    case "/delete":
+    case "/deleteClass":
       response = {
         success: `Class has been successfully deleted!\n\nName: ${options.className}`,
         confirm: `Are you sure you want to delete class? All subjects and homework will be deleted permanently`,
@@ -31,19 +31,19 @@ module.exports = (source, options) => {
         classErr: "<b>ERROR: you are not in any class </b>",
       };
       break;
-    case "/leave":
+    case "/leaveClass":
       response = {
         success: `You successfully left the Class!\n\nName: ${options.className}`,
         classErr: "<b>ERROR: you are not in any class </b>",
       };
       break;
-    case "/class":
+    case "/classInfo":
       response = {
         success: `Your class info:\n\nName: ${options.className}\nNumber of users: ${options.usersNum}`,
         classErr: "<b>ERROR: you are not in any class </b>",
       };
       break;
-    case "/invite":
+    case "/inviteUser":
       response = {
         success: `User has entered the class!`,
         sendMessage:
@@ -53,7 +53,7 @@ module.exports = (source, options) => {
         classErr: "<b>ERROR: you are not in any class </b>",
       };
       break;
-    case "/promote":
+    case "/promoteUser":
       response = {
         success: "User has been promoted!",
         sendMessage:
@@ -64,7 +64,7 @@ module.exports = (source, options) => {
         userClassErr: "<b>ERROR: user is not in the class </b>",
       };
       break;
-    case "/add":
+    case "/addSubject":
       response = {
         success: `${options.subjectName} has been added on ${options.day} as a ${options.subjectIndex} class!`,
         selectDay:
@@ -77,7 +77,7 @@ module.exports = (source, options) => {
         msgErr: `<b>ERROR: there's a subject with the ${options.subjectIndex} index on ${options.day}\nRemove the subject with the ${options.subjectIndex} index and try again</b>`,
       };
       break;
-    case "/remove":
+    case "/removeSubject":
       response = {
         success: `${options.subjectName} has been removed from ${options.day}\n${options.subjectName} was a ${options.subjectIndex} class!`,
         selectDay:
@@ -101,6 +101,44 @@ module.exports = (source, options) => {
           "<b>ERROR: you don't have permission to add subjects</b>",
         classErr: "<b>ERROR: you are not in any class </b>",
         msgErr: `<b>ERROR: there's no ${options.subjectName} on ${options.day}</b>`,
+        subjectsErr: `<b>ERROR: ${options.day} has no subjects</b>\nPlease add subject first`,
+      };
+      break;
+    case "/show":
+      response = {
+        success: `Homework for ${options.day}:\n${options.homework}`,
+        selectDay:
+          "Please select the day of the week to which you want to note homework",
+        selectSubject: `Please select the subject of the ${options.day} to which you want to note homework`,
+        classErr: "<b>ERROR: you are not in any class </b>",
+        subjectsErr: `<b>ERROR: ${options.day} has no subjects</b>\nPlease add subject first`,
+        createAllHomeworkResponse(homework) {
+          const days = Object.keys(homework);
+          days.shift();
+          let response = `<b>Homework:</b>`;
+
+          days.forEach((day) => {
+            response += `\n\n<b>${day}:</b>\n`;
+            homework[day].forEach((subject) => {
+              response += `<b>${subject.subjectIndex}.${subject.subject}:</b> ${subject.text}\n`;
+            });
+          });
+
+          return response;
+        },
+        createDayHomeworkResponse(homework) {
+          const subjects = Object.keys(homework);
+          let response = `<b>Homework for ${options.day}:</b>\n\n`;
+
+          subjects.forEach((subject) => {
+            response += `<b>${homework[subject].subjectIndex}.${homework[subject].subject}:</b> ${homework[subject].text}\n`;
+          });
+
+          return response;
+        },
+        createSubjectHomeworkResponse(subjectDoc) {
+          return `<b>${subjectDoc.subjectIndex}.${subjectDoc.subject}: </b>${subjectDoc.text}`;
+        },
       };
       break;
     case "Back":

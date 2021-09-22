@@ -86,7 +86,7 @@ bot.onText(/^\/create/, async (msg) => {
   // check if the user is a member of the class - send an error message
   const isUserinClass = await userController.checkUserinClass(userID);
   if (isUserinClass) {
-    response = getResponse(source, { validErr: true }).classErr;
+    response = getResponse(source, {}).classErr;
 
     return bot.sendMessage(id, response, options);
   }
@@ -308,7 +308,6 @@ bot.onText(/^\/addSubject$/, async (msg, [source]) => {
       ["Thursday", "Friday"],
       ["Back"],
     ],
-    one_time_keyboard: true,
   };
   response = getResponse(source, {}).selectDay;
 
@@ -352,7 +351,6 @@ bot.onText(/^\/removeSubject$/, async (msg, [source]) => {
       ["Thursday", "Friday"],
       ["Back"],
     ],
-    one_time_keyboard: true,
   };
   response = getResponse(source, {}).selectDay;
 
@@ -396,7 +394,41 @@ bot.onText(/^\/note$/, async (msg, [source]) => {
       ["Thursday", "Friday"],
       ["Back"],
     ],
-    one_time_keyboard: true,
+  };
+  response = getResponse(source, {}).selectDay;
+
+  bot.sendMessage(id, response, options);
+});
+
+bot.onText(/^\/show$/, async (msg, [source]) => {
+  const { id } = msg.chat;
+  const userID = msg.from.id;
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+    reply_markup: {
+      hide_keyboard: true,
+    },
+  };
+  let response;
+
+  // check if the user is a member of the class
+  const isUserinClass = await userController.checkUserinClass(userID);
+  if (!isUserinClass) {
+    response = getResponse(source, {}).classErr;
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  // saving '/show' command to the db to know users request in the future
+  await requestController.updateRequest(userID, source);
+
+  options.reply_markup = {
+    keyboard: [
+      ["Monday", "Tuesday", "Wednesday"],
+      ["Thursday", "Friday", "All"],
+      ["Back"],
+    ],
   };
   response = getResponse(source, {}).selectDay;
 
@@ -522,7 +554,7 @@ bot.onText(
     if (!request) return;
     if (
       !request.some((item) =>
-        ["/addSubject", "/removeSubject", "/note"].includes(item)
+        ["/addSubject", "/removeSubject", "/note", "/show"].includes(item)
       )
     )
       return;
@@ -540,16 +572,55 @@ bot.onText(
     }
     if (request.includes("/note")) {
       source = "/note";
+
+      // check if day has at least one subject
+      const isSubjectinDay = await homeworkController.checkDayhasSubjects(
+        userID,
+        weekday
+      );
+      if (!isSubjectinDay) {
+        response = getResponse(source, { day: weekday }).subjectsErr;
+
+        await requestController.clearRequest(userID);
+        return bot.sendMessage(id, response, options);
+      }
+
+      options.reply_markup = {
+        keyboard: await homeworkController.getSubjectsButtons(userID, weekday),
+        one_time_keyboard: true,
+      };
+    }
+    if (request.includes("/show")) {
+      source = "/show";
+
+      // check if day has at least one subject
+      const isSubjectinDay = await homeworkController.checkDayhasSubjects(
+        userID,
+        weekday
+      );
+      if (!isSubjectinDay) {
+        response = getResponse(source, { day: weekday }).subjectsErr;
+
+        await requestController.clearRequest(userID);
+        return bot.sendMessage(id, response, options);
+      }
+
       options.reply_markup = {
         keyboard: await homeworkController.getSubjectsButtons(userID, weekday),
       };
+
+      options.reply_markup.keyboard.splice(
+        options.reply_markup.keyboard.length - 2,
+        0,
+        ["All Day"]
+      );
     }
 
     // saving weekday to the db to know users request in the future
     await requestController.updateRequest(userID, weekday);
 
     response = getResponse(source, { day: weekday }).sendMessage;
-    if (source === "/note")
+    if (["/note", "/show"].includes(request[0]))
       response = getResponse(source, { day: weekday }).selectSubject;
 
     return bot.sendMessage(id, response, options);
@@ -637,6 +708,67 @@ bot.onText(/^[1-9].[A-Za-zА-яа-я]|^10.[A-Za-zА-яа-я]/, async (msg) => {
 
     return bot.sendMessage(id, response, options);
   }
+  if (request.includes("/show") && request.length === 2) {
+    const source = "/show";
+    const [subjectIndex, subject] = msg.text.split(".");
+
+    const subjectDoc = await homeworkController.getSubjectHomework(
+      userID,
+      day,
+      subjectIndex,
+      subject
+    );
+
+    response = getResponse(source, {}).createSubjectHomeworkResponse(
+      subjectDoc
+    );
+
+    await requestController.clearRequest(userID);
+    bot.sendMessage(id, response, options);
+  }
+});
+
+bot.onText(/^All/, async (msg) => {
+  const { id } = msg.chat;
+  const userID = msg.from.id;
+  const source = "/show";
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+    reply_markup: {
+      hide_keyboard: true,
+    },
+  };
+  let response;
+
+  const request = await requestController.getRequest(userID);
+  if (!request) return;
+  if (!request.includes(source)) return;
+
+  const [, text] = msg.text.split(" ");
+
+  if (text === "Day") {
+    // All Day
+    const homework = await homeworkController.getDayHomework(
+      userID,
+      request[1]
+    );
+
+    response = getResponse(source, {
+      day: request[1],
+    }).createDayHomeworkResponse(homework);
+
+    await requestController.clearRequest(userID);
+    bot.sendMessage(id, response, options);
+  } else {
+    // All
+    const homework = await homeworkController.getAllHomework(userID);
+
+    response = getResponse(source, {}).createAllHomeworkResponse(homework);
+
+    await requestController.clearRequest(userID);
+    bot.sendMessage(id, response, options);
+  }
 });
 
 bot.on("message", async (msg) => {
@@ -661,7 +793,10 @@ bot.on("message", async (msg) => {
       "Thursday",
       "Friday",
       "Back",
+      "back",
       "Delete сlass",
+      "All",
+      "All Day",
     ].includes(msg.text)
   )
     return;
@@ -680,7 +815,6 @@ bot.on("message", async (msg) => {
       options.reply_markup = {
         inline_keyboard: [[{ text: "Back", callback_data: "Back" }]],
       };
-      console.log("SUBJECT");
 
       const isSubjectinDay = await homeworkController.checkSubjectinDay(
         userID,
@@ -689,7 +823,6 @@ bot.on("message", async (msg) => {
       );
       if (!isSubjectinDay) {
         response = getResponse(source, {
-          validErr: true,
           subjectName,
           day,
         }).selectSubject;
