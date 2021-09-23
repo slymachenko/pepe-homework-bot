@@ -43,18 +43,30 @@ module.exports = (source, options) => {
       break;
     case "/classInfo":
       response = {
-        success: `Your class info:\n\nName: ${options.className}\nNumber of users: ${options.usersNum}\nInvite link: https://t.me/Test_homework_dev_bot?start=${options.classURL}`,
         classErr: "<b>ERROR: you are not in any class </b>",
-      };
-      break;
-    case "/inviteUser":
-      response = {
-        success: `User has entered the class!`,
-        sendMessage:
-          "Please send me ID of the user\nUser can get it with this command /getid\nIf you want to go back, click 'Back'\n\nExample:\n123456789",
-        permissionErr:
-          "<b>ERROR: you don't have permission to invite users</b>",
-        classErr: "<b>ERROR: you are not in any class </b>",
+        createClassInfoResponse(classDoc) {
+          const [className, usersNum, classURL] = [
+            classDoc.name,
+            classDoc.users.length,
+            classDoc._id,
+          ];
+          let response = `Your class info:\n\nName: ${className}\nNumber of users: ${usersNum}\nInvite link: https://t.me/Test_homework_dev_bot?start=${classURL}`;
+          let admins = `\n\nAdmins:\n`;
+          let users = `\nUsers:\n`;
+
+          classDoc.users.forEach((user) => {
+            if (user.isAdmin) {
+              admins += `<a href="tg://user?id=${user.userID}">@${user.username}</a>\n`;
+            } else {
+              users += `<a href="tg://user?id=${user.userID}">@${user.username}</a>\n`;
+            }
+          });
+
+          response += admins;
+          response += users;
+
+          return response;
+        },
       };
       break;
     case "/promoteUser":
@@ -67,6 +79,9 @@ module.exports = (source, options) => {
         classErr: "<b>ERROR: you are not in any class </b>",
         userClassErr: "<b>ERROR: user is not in the class </b>",
       };
+      break;
+    case "/demoteUser":
+      response = `<a href="tg://user?id=${options.userID}">@${options.username}</a>`;
       break;
     case "/addSubject":
       response = {

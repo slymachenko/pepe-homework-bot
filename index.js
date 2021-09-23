@@ -35,6 +35,7 @@ bot.onText(/^\/start/, async (msg, [source]) => {
   const { id } = msg.chat;
   const userName = msg.from.first_name;
   const userID = msg.from.id;
+  const username = msg.from.username;
   const options = {
     parse_mode: "HTML",
     disable_notification: true,
@@ -47,7 +48,7 @@ bot.onText(/^\/start/, async (msg, [source]) => {
     return bot.sendMessage(id, response, options);
   }
 
-  const classDoc = await userController.addUsertoClass(URL, userID);
+  const classDoc = await userController.addUsertoClass(URL, userID, username);
   if (!classDoc) {
     const response = getResponse(source, {}).classErr;
 
@@ -84,6 +85,7 @@ bot.onText(/^\/getid$/, (msg, [source]) => {
 bot.onText(/^\/create/, async (msg) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
+  const username = msg.from.username;
   const options = {
     parse_mode: "HTML",
     disable_notification: true,
@@ -115,6 +117,7 @@ bot.onText(/^\/create/, async (msg) => {
         userID,
         isAdmin: true,
         request: [],
+        username,
       },
     ],
   });
@@ -202,13 +205,7 @@ bot.onText(/^\/classInfo$/, async (msg, [source]) => {
     return bot.sendMessage(id, response, options);
   }
 
-  const [className, usersNum, classURL] = [
-    classDoc.name,
-    classDoc.users.length,
-    classDoc._id,
-  ];
-
-  response = getResponse(source, { className, usersNum, classURL }).success;
+  response = getResponse(source, {}).createClassInfoResponse(classDoc);
 
   bot.sendMessage(id, response, options);
 });

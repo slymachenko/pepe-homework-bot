@@ -1,7 +1,7 @@
 const Class = require("../models/classModel");
 
 // returns class document if user successfully entered. If not returns false
-exports.addUsertoClass = async (URL, userID) => {
+exports.addUsertoClass = async (URL, userID, username) => {
   try {
     const classDoc = await Class.findById(URL);
     if (!classDoc) return false;
@@ -14,6 +14,7 @@ exports.addUsertoClass = async (URL, userID) => {
       isAdmin: false,
       request: [],
       userID,
+      username,
     });
     classDoc.save();
 
