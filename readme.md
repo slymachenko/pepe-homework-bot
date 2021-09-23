@@ -8,37 +8,16 @@ Telegram bot for easy access to homework for week
 [![Mongoose](https://img.shields.io/badge/Mongoose-v5.11.8-red)](https://mongoosejs.com/)
 [![Dot-env](https://img.shields.io/badge/DotEnv-v8.2.0-yellow)](https://github.com/motdotla/dotenv)
 
-# Usage 
+# Usage
 
 **(Currently off)**
+
 - Find **@pepe_homework_bot** in telegram search
 - Click **Start**
 
 # Command list
 
-`/start` - start the bot  
-`/help` - help info  
-
-`/show` - shows all homework  
-`/show *day*` - shows homework for the day  
-`/show *day* *subject*` - shows homework for the specific subject  
-
-`/note *day* *subject* *homework*` - notes homework for specific subject  
-\*in photo attachment\*`/note *day* *subject*` - attaches photo for the specific subject  
-\*in photo attachment\*`/note *day* *subject* *homework*` - attaches photo and homework for the specific subject  
-
-`/clear` - clears all homework   
-`/clear *day*` - clears homework for the day  
-`/clear *day* *subject*` - clears homework for the specific subject  
-
-`*day*` - num that represents the day of the week  
-`*subject*` - subject name that exists on the selected day  
-`*homework*` - text you want to attach to the selected subject and day  
-
 # Example
-
-![1-example](https://raw.githubusercontent.com/SENYa-408/pepe-homework-bot/master/readme-imgs/1-example.png)
-![2-example](https://raw.githubusercontent.com/SENYa-408/pepe-homework-bot/master/readme-imgs/2-example.png)
 
 # Install
 

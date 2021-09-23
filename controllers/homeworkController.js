@@ -1,160 +1,204 @@
-const dayController = require("./dayController");
-const subjectController = require("./subjectController");
-const messageController = require("./messageController");
+const Class = require("../models/classModel");
+const Homework = require("../models/homeworkModel");
 
-exports.updateHomework = async (dayIndex, subjName, options) => {
+const getDay = async (userID, day) => {
   try {
-    const day = await dayController.findDay(dayIndex);
-    const subjects = await subjectController.findDaySubjects(dayIndex);
+    // retrieving class document with userID in
+    const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+    if (!classDoc) return false;
+    const homeworkDoc = await Homework.findOne({ classID: classDoc._id });
 
-    // VALIDATION
-    if (day === null || !new RegExp("^[1-7]$").test(dayIndex))
-      return messageController.responseMessage("dayIndexErr");
-    if (!subjects.includes(subjName))
-      return messageController.responseMessage("subjErr");
-    if (!options.homeworkText && !options.photo)
-      return messageController.responseMessage("hwText&photoErr");
-
-    const subjectIndex = day.subjects.findIndex(
-      (el) => el.subject === subjName
-    );
-
-    day.subjects[subjectIndex].text =
-      options.homeworkText || day.subjects[subjectIndex].text;
-    day.subjects[subjectIndex].photo =
-      options.photo || day.subjects[subjectIndex].photo;
-
-    day.save();
-    return `homework has been updated`;
+    return homeworkDoc.days[day];
   } catch (err) {
     console.error(err);
   }
 };
 
-exports.findAllHomework = async () => {
+// returns homework document if succeed. If not returns false
+exports.createSubject = async (userID, subject) => {
   try {
-    const days = await dayController.findAllDays();
+    // retrieving class document with userID in
+    const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+    if (!classDoc) return false;
+    const homeworkDoc = await Homework.findOne({ classID: classDoc._id });
 
-    let response = `<strong>All homework:</strong>`;
+    let isIndexUnique = true;
 
-    days.forEach((day) => {
-      day.subjects.forEach((subj) => {
-        if (subj.text.length > 0 || subj.photo.length > 0)
-          response += `
-${day.dayIndex} ${subj.subject}: ${subj.text} ${subj.photo ? `[PHOTO]` : ``}`;
-      });
+    homeworkDoc.days[subject.day].forEach((el) => {
+      if (el.subjectIndex == subject.index) isIndexUnique = false;
     });
 
-    return response;
-  } catch (err) {
-    console.error(err);
-  }
-};
+    if (!isIndexUnique) return false;
 
-exports.findDayHomework = async (dayIndex) => {
-  try {
-    const day = await dayController.findDay(dayIndex);
-
-    const response = messageController.responseMessage("dayIndexErr");
-
-    if (day === null) return response;
-
-    let homeworkData = `<strong>Homework: </strong>`;
-
-    day.subjects.forEach((subj) => {
-      let line = `
-    <strong>${subj.subject}:</strong> ${subj.text} ${
-        subj.photo ? `[PHOTO]` : ``
-      }`;
-
-      homeworkData += line;
+    homeworkDoc.days[subject.day].push({
+      subject: subject.name,
+      subjectIndex: subject.index,
     });
 
-    return homeworkData;
+    homeworkDoc.days[subject.day].sort((a, b) => {
+      if (a.subjectIndex > b.subjectIndex) return 1;
+      if (a.subjectIndex < b.subjectIndex) return -1;
+      return 0;
+    });
+
+    homeworkDoc.save();
+
+    return homeworkDoc;
   } catch (err) {
     console.error(err);
   }
 };
 
-exports.findSubjHomework = async (dayIndex, subjectName) => {
+// returns homework document if succeed. If not returns false
+exports.deleteSubject = async (userID, subject) => {
   try {
-    const day = await dayController.findDay(dayIndex);
+    // retrieving class document with userID in
+    const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+    if (!classDoc) return false;
+    const homeworkDoc = await Homework.findOne({ classID: classDoc._id });
 
-    const response = messageController.responseMessage("dayIndexErr");
+    let subjectIndex = false;
 
-    if (day === null) return response;
+    homeworkDoc.days[subject.day].forEach((el, i) => {
+      if (el.subject === subject.name && el.subjectIndex == subject.index)
+        subjectIndex = i;
+    });
 
-    let homeworkData = ``;
-    let photo = ``;
+    if (subjectIndex === false) return false;
 
-    const subjects = [];
-    day.subjects.forEach((el) => {
-      if (el.subject === subjectName) {
-        subjects.push(el);
+    homeworkDoc.days[subject.day].splice(subjectIndex, 1);
+
+    homeworkDoc.save();
+    return homeworkDoc;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+exports.getSubjectsButtons = async (userID, day) => {
+  try {
+    const dayDoc = await getDay(userID, day);
+
+    const subjectsArr = [[], [], [], []];
+
+    dayDoc.forEach((el, i) => {
+      //   if ([0, 4, 6, 9].includes(i)) subjectsArr.push([]);
+      if (i <= 2) subjectsArr[0].push(`${el.subjectIndex}.${el.subject}`);
+      if (i > 2 && i <= 5)
+        subjectsArr[1].push(`${el.subjectIndex}.${el.subject}`);
+      if (i > 5 && i <= 8)
+        subjectsArr[2].push(`${el.subjectIndex}.${el.subject}`);
+      if (i > 8) subjectsArr[3].push(`${el.subjectIndex}.${el.subject}`);
+    });
+
+    subjectsArr.push(["Back"]);
+
+    return subjectsArr;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+exports.checkDayhasSubjects = async (userID, day) => {
+  const dayDoc = await getDay(userID, day);
+  let isSubjectinDay = false;
+
+  if (dayDoc.length > 0) isSubjectinDay = true;
+
+  return isSubjectinDay;
+};
+
+exports.checkSubjectinDay = async (userID, day, subject) => {
+  const dayDoc = await getDay(userID, day);
+  let isSubjectinDay = false;
+
+  dayDoc.forEach((el) => {
+    if (el.subject === subject) isSubjectinDay = true;
+  });
+
+  return isSubjectinDay;
+};
+
+exports.addHomework = async (userID, day, subject, homework) => {
+  try {
+    // retrieving class document with userID in
+    const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+    if (!classDoc) return false;
+    const homeworkDoc = await Homework.findOne({ classID: classDoc._id });
+    const dayDoc = homeworkDoc.days[day];
+
+    dayDoc.forEach((el) => {
+      if (el.subject === subject) {
+        el.text = homework;
       }
     });
 
-    subjects.forEach((subject) => {
-      homeworkData += `
-<strong>${subject.subject}: ${subject.text}</strong>`;
-      photo = subject.photo;
-    });
-
-    return { homeworkData, photo };
+    homeworkDoc.save();
+    return true;
   } catch (err) {
     console.error(err);
   }
 };
 
-exports.clearHomework = async (dayIndex, subjName) => {
+exports.clearHomework = async (userID, day, subject) => {
   try {
-    const day = await dayController.findDay(dayIndex);
-    const subjects = await subjectController.findDaySubjects(dayIndex);
+    // retrieving class document with userID in
+    const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+    if (!classDoc) return false;
+    const homeworkDoc = await Homework.findOne({ classID: classDoc._id });
+    const dayDoc = homeworkDoc.days[day];
 
-    // VALIDATION
-    if (day === null || !new RegExp("^[1-7]$").test(dayIndex))
-      return messageController.responseMessage("dayIndexErr");
-    if (subjName && !subjects.includes(subjName))
-      return messageController.responseMessage("subjErr");
-
-    if (subjName) {
-      const subjectIndex = day.subjects.findIndex(
-        (el) => el.subject === subjName
-      );
-
-      day.subjects[subjectIndex].text = "";
-      day.subjects[subjectIndex].photo = "";
-
-      day.save();
-      return `homework for ${subjName} has been cleared`;
-    }
-
-    day.subjects.forEach((el) => {
-      el.text = "";
-      el.photo = "";
+    dayDoc.forEach((el) => {
+      if (el.subject === subject) {
+        el.text = "";
+      }
     });
 
-    day.save();
-    return `homework for ${dayIndex} day has been cleared`;
+    homeworkDoc.save();
+    return true;
   } catch (err) {
     console.error(err);
   }
 };
 
-exports.clearAllHomework = async () => {
+exports.getAllHomework = async (userID) => {
   try {
-    const days = await dayController.findAllDays();
+    // retrieving class document with userID in
+    const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+    if (!classDoc) return false;
+    const homeworkDoc = await Homework.findOne({ classID: classDoc._id });
 
-    days.forEach((day) => {
-      day.subjects.forEach((subj) => {
-        subj.text = "";
-        subj.photo = "";
-      });
+    return homeworkDoc.days;
+  } catch (err) {
+    console.error(err);
+  }
+};
 
-      day.save();
+exports.getDayHomework = async (userID, day) => {
+  try {
+    // retrieving class document with userID in
+    const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+    if (!classDoc) return false;
+    const homeworkDoc = await Homework.findOne({ classID: classDoc._id });
+
+    return homeworkDoc.days[day];
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+exports.getSubjectHomework = async (userID, day, subjectIndex, subject) => {
+  try {
+    // retrieving class document with userID in
+    const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+    if (!classDoc) return false;
+    const homeworkDoc = await Homework.findOne({ classID: classDoc._id });
+
+    const subjIndex = homeworkDoc.days[day].findIndex((el) => {
+      return el.subject === subject && el.subjectIndex == subjectIndex;
     });
 
-    return `all homework has been cleared`;
+    return homeworkDoc.days[day][subjIndex];
   } catch (err) {
     console.error(err);
   }
