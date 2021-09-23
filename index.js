@@ -702,8 +702,6 @@ bot.onText(/^[1-9].[A-Za-zА-яа-я]|^10.[A-Za-zА-яа-я]/, async (msg) => {
       return bot.sendMessage(id, response, options);
     }
 
-    await requestController.clearRequest(userID);
-
     response = getResponse(source, {
       subjectIndex,
       subjectName,
@@ -758,6 +756,21 @@ bot.onText(/^[1-9].[A-Za-zА-яа-я]|^10.[A-Za-zА-яа-я]/, async (msg) => {
     );
 
     await requestController.clearRequest(userID);
+
+    if (subjectDoc.photo.length > 1) {
+      const media = homeworkController.getMediaPhotoGroup(
+        subjectDoc.photo,
+        response
+      );
+
+      return bot.sendMediaGroup(id, media, options);
+    }
+    if (subjectDoc.photo.length === 1) {
+      options.caption = response;
+
+      return bot.sendPhoto(id, subjectDoc.photo[0], options);
+    }
+
     bot.sendMessage(id, response, options);
   }
 });
@@ -805,7 +818,7 @@ bot.onText(/^All/, async (msg) => {
   }
 });
 
-bot.on("message", async (msg) => {
+bot.on("text", async (msg) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
   const options = {
@@ -842,13 +855,13 @@ bot.on("message", async (msg) => {
   if (request.includes("/note")) {
     const day = request[1];
     source = "/note";
+    options.reply_markup = {
+      inline_keyboard: [[{ text: "Back", callback_data: "Back" }]],
+    };
 
     if (request.length === 2) {
       // user message => SUBJECT
       const subjectName = msg.text.split(".")[1];
-      options.reply_markup = {
-        inline_keyboard: [[{ text: "Back", callback_data: "Back" }]],
-      };
 
       const isSubjectinDay = await homeworkController.checkSubjectinDay(
         userID,
@@ -878,14 +891,10 @@ bot.on("message", async (msg) => {
       const homeworkText = msg.text;
       const subjectName = request[2];
 
-      await homeworkController.addHomework(
-        userID,
-        day,
-        subjectName,
-        homeworkText
-      );
+      await homeworkController.addHomework(userID, day, subjectName, {
+        text: homeworkText,
+      });
 
-      await requestController.clearRequest(userID);
       response = getResponse(source, { subjectName, day }).success;
 
       return bot.sendMessage(id, response, options);
@@ -922,6 +931,38 @@ bot.on("message", async (msg) => {
 
     return bot.sendMessage(id, response, options);
   }
+});
+
+bot.on("photo", async (msg) => {
+  const { id } = msg.chat;
+  const userID = msg.from.id;
+  const photo_id = msg.photo[3].file_id;
+  const homeworkText = msg.caption;
+  const source = "/note";
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+    reply_markup: {
+      inline_keyboard: [[{ text: "Back", callback_data: "Back" }]],
+    },
+  };
+
+  console.log(msg);
+
+  // check if the user made a request
+  const request = await requestController.getRequest(userID);
+  if (!request || !request.includes(source) || request.length !== 3) return;
+
+  const [, day, subjectName] = request;
+
+  await homeworkController.addHomework(userID, day, subjectName, {
+    text: homeworkText,
+    photo: photo_id,
+  });
+
+  const response = getResponse(source, { subjectName, day }).success;
+
+  return bot.sendMessage(id, response, options);
 });
 
 bot.on("callback_query", async (data) => {

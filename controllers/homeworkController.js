@@ -129,7 +129,8 @@ exports.addHomework = async (userID, day, subject, homework) => {
 
     dayDoc.forEach((el) => {
       if (el.subject === subject) {
-        el.text = homework;
+        el.text = homework.text || el.text;
+        if (homework.photo) el.photo.push(homework.photo);
       }
     });
 
@@ -151,6 +152,7 @@ exports.clearHomework = async (userID, day, subject) => {
     dayDoc.forEach((el) => {
       if (el.subject === subject) {
         el.text = "";
+        el.photo = "";
       }
     });
 
@@ -202,4 +204,16 @@ exports.getSubjectHomework = async (userID, day, subjectIndex, subject) => {
   } catch (err) {
     console.error(err);
   }
+};
+
+exports.getMediaPhotoGroup = (photos, caption) => {
+  let media = [];
+
+  photos.forEach((el, i) => {
+    if (i === 1)
+      media.push({ type: "photo", media: el, caption, parse_mode: "HTML" });
+    if (i !== 1) media.push({ type: "photo", media: el });
+  });
+
+  return media;
 };

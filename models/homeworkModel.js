@@ -16,8 +16,8 @@ const subjectSchema = new mongoose.Schema({
     default: "",
   },
   photo: {
-    type: String,
-    default: "",
+    type: [String],
+    default: [],
   },
 });
 

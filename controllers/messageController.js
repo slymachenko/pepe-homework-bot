@@ -142,12 +142,14 @@ module.exports = (source, options) => {
         createAllHomeworkResponse(homework) {
           const days = Object.keys(homework);
           days.shift();
-          let response = `<b>Homework:</b>`;
+          let response = `<b>Homework:</b>\n`;
 
           days.forEach((day) => {
-            response += `\n\n<b>${day}:</b>\n`;
+            response += `\n<b>${day}:</b>\n`;
             homework[day].forEach((subject) => {
-              response += `<b>${subject.subjectIndex}.${subject.subject}:</b> ${subject.text}\n`;
+              response += `<b>${subject.subjectIndex}.${subject.subject}:</b> ${
+                subject.text
+              } ${subject.photo.length ? "<b>[PHOTO]</b>" : ""}\n`;
             });
           });
 
@@ -158,7 +160,11 @@ module.exports = (source, options) => {
           let response = `<b>Homework for ${options.day}:</b>\n\n`;
 
           subjects.forEach((subject) => {
-            response += `<b>${homework[subject].subjectIndex}.${homework[subject].subject}:</b> ${homework[subject].text}\n`;
+            response += `<b>${homework[subject].subjectIndex}.${
+              homework[subject].subject
+            }:</b> ${homework[subject].text} ${
+              homework[subject].photo.length ? "<b>[PHOTO]</b>" : ""
+            }\n`;
           });
 
           return response;
