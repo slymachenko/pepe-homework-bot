@@ -31,15 +31,31 @@ console.log("Bot have been started...");
 
 // COMMAND LISTENERS
 
-bot.onText(/^\/start$/, (msg, [source]) => {
+bot.onText(/^\/start/, async (msg, [source]) => {
   const { id } = msg.chat;
   const userName = msg.from.first_name;
+  const userID = msg.from.id;
   const options = {
     parse_mode: "HTML",
     disable_notification: true,
   };
+  const URL = msg.text.substr(msg.text.indexOf(" ") + 1);
 
-  const response = getResponse(source, { userName });
+  if (URL === source) {
+    const response = getResponse(source, { userName }).start;
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  const classDoc = await userController.addUsertoClass(URL, userID);
+  if (!classDoc) {
+    const response = getResponse(source, {}).classErr;
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  const className = classDoc.name;
+  const response = getResponse(source, { userName, className }).success;
 
   bot.sendMessage(id, response, options);
 });
@@ -186,48 +202,13 @@ bot.onText(/^\/classInfo$/, async (msg, [source]) => {
     return bot.sendMessage(id, response, options);
   }
 
-  const [className, usersNum] = [classDoc.name, classDoc.users.length];
+  const [className, usersNum, classURL] = [
+    classDoc.name,
+    classDoc.users.length,
+    classDoc._id,
+  ];
 
-  response = getResponse(source, { className, usersNum }).success;
-
-  bot.sendMessage(id, response, options);
-});
-
-bot.onText(/^\/inviteUser$/, async (msg, [source]) => {
-  const { id } = msg.chat;
-  const userID = msg.from.id;
-  const options = {
-    parse_mode: "HTML",
-    disable_notification: true,
-    reply_markup: {
-      hide_keyboard: true,
-    },
-  };
-  let response;
-
-  // check if the user is a member of the class
-  const isUserinClass = await userController.checkUserinClass(userID);
-  if (!isUserinClass) {
-    response = getResponse(source, {}).classErr;
-
-    return bot.sendMessage(id, response, options);
-  }
-
-  // check if the user is an admin
-  const isUserAdmin = await userController.checkUserAdmin(userID);
-  if (!isUserAdmin) {
-    response = getResponse(source, {}).permissionErr;
-
-    return bot.sendMessage(id, response, options);
-  }
-
-  // saving '/inviteUser' command to the db to know users request in the future
-  await requestController.updateRequest(userID, source);
-
-  options.reply_markup = {
-    inline_keyboard: [[{ text: "Back", callback_data: "Back" }]],
-  };
-  response = getResponse(source, {}).sendMessage;
+  response = getResponse(source, { className, usersNum, classURL }).success;
 
   bot.sendMessage(id, response, options);
 });
@@ -500,17 +481,6 @@ bot.onText(/^\d{9,9}$/, async (msg) => {
 
   // check if the user made a request
   const request = await requestController.getRequest(userID);
-  if (request.includes("/inviteUser")) {
-    const source = "/inviteUser";
-    // adding user to the class object
-    await userController.addUsertoClass(userID, secUserID);
-
-    await requestController.clearRequest(userID);
-
-    response = getResponse(source, {});
-
-    return bot.sendMessage(id, response, options);
-  }
   if (request.includes("/promoteUser")) {
     const source = "/promoteUser";
 

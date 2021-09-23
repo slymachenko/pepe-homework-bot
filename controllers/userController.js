@@ -1,15 +1,21 @@
 const Class = require("../models/classModel");
 
-// returns class document if user successfully added. If not returns false
-exports.addUsertoClass = async (userID, inviteUserID) => {
+// returns class document if user successfully entered. If not returns false
+exports.addUsertoClass = async (URL, userID) => {
   try {
-    const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+    const classDoc = await Class.findById(URL);
     if (!classDoc) return false;
 
-    // adding to users array object that contains userID
-    classDoc.users.push({ userID: inviteUserID, isAdmin: false, request: "" });
+    classDoc.users.forEach((el) => {
+      if (el.userID == userID) return false;
+    });
 
-    await classDoc.save();
+    classDoc.users.push({
+      isAdmin: false,
+      request: [],
+      userID,
+    });
+    classDoc.save();
 
     return classDoc;
   } catch (err) {

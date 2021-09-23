@@ -4,7 +4,11 @@ module.exports = (source, options) => {
 
   switch (source) {
     case "/start":
-      response = `Hi, ${options.userName}\n/help for more info`;
+      response = {
+        start: `Hi, ${options.userName}\n/help for more info`,
+        success: `Hi, ${options.userName}. You entered the <b>${options.className}</b> class!`,
+        classErr: `You are already in the class`,
+      };
       break;
     case "/help":
       response =
@@ -39,7 +43,7 @@ module.exports = (source, options) => {
       break;
     case "/classInfo":
       response = {
-        success: `Your class info:\n\nName: ${options.className}\nNumber of users: ${options.usersNum}`,
+        success: `Your class info:\n\nName: ${options.className}\nNumber of users: ${options.usersNum}\nInvite link: https://t.me/Test_homework_dev_bot?start=${options.classURL}`,
         classErr: "<b>ERROR: you are not in any class </b>",
       };
       break;
