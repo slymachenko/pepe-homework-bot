@@ -61,3 +61,24 @@ exports.findClass = async (userID) => {
     console.error(err);
   }
 };
+
+exports.checkClasshasSingleAdmin = async (userID) => {
+  try {
+    // retrieving class document with userID in
+    const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+    if (!classDoc) return false; // if there's no class with user in return false
+    let adminsCount = 0;
+
+    // checking if class has only one member
+    if (classDoc.users.length === 1) return false;
+
+    classDoc.users.forEach((el) => {
+      if (el.isAdmin) adminsCount++;
+    });
+
+    if (adminsCount > 1) return false;
+    return true;
+  } catch (err) {
+    console.error(err);
+  }
+};

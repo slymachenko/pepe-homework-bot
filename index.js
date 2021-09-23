@@ -176,6 +176,15 @@ bot.onText(/^\/leaveClass$/, async (msg, [source]) => {
   };
   let response;
 
+  const isClasshasSingleAdmin = await classController.checkClasshasSingleAdmin(
+    userID
+  );
+  if (!isClasshasSingleAdmin) {
+    response = getResponse(source, {}).userClassErr;
+
+    return bot.sendMessage(id, response, options);
+  }
+
   // deleting user from the users array in Class document
   const classDoc = await classController.leaveClass(userID);
 

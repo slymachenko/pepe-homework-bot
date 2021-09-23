@@ -38,6 +38,7 @@ module.exports = (source, options) => {
     case "/leaveClass":
       response = {
         success: `You successfully left the Class!\n\nName: ${options.className}`,
+        userClassErr: `<b>ERROR: you can't leave a class where you are the only administrator or the only member. /deleteClass first</b>`,
         classErr: "<b>ERROR: you are not in any class </b>",
       };
       break;
