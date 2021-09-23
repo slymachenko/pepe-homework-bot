@@ -76,7 +76,7 @@ exports.checkClasshasSingleAdmin = async (userID) => {
       if (el.isAdmin) adminsCount++;
     });
 
-    if (adminsCount > 1) return false;
+    if (adminsCount === 1) return false;
     return true;
   } catch (err) {
     console.error(err);

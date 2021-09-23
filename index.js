@@ -48,7 +48,11 @@ bot.onText(/^\/start/, async (msg, [source]) => {
     return bot.sendMessage(id, response, options);
   }
 
-  const classDoc = await userController.addUsertoClass(URL, userID, username);
+  const classDoc = await userController.addUsertoClass(
+    URL,
+    userID,
+    username ? username : userName
+  );
   if (!classDoc) {
     const response = getResponse(source, {}).classErr;
 
@@ -180,7 +184,7 @@ bot.onText(/^\/leaveClass$/, async (msg, [source]) => {
     userID
   );
   if (!isClasshasSingleAdmin) {
-    response = getResponse(source, {}).userClassErr;
+    response = getResponse(source, {}).singleUserErr;
 
     return bot.sendMessage(id, response, options);
   }
@@ -251,9 +255,47 @@ bot.onText(/^\/promoteUser$/, async (msg, [source]) => {
   await requestController.updateRequest(userID, source);
 
   options.reply_markup = {
-    inline_keyboard: [[{ text: "Back", callback_data: "Back" }]],
+    inline_keyboard: await userController.createUserButtons(userID),
   };
-  response = getResponse(source, {}).sendMessage;
+  response = getResponse(source).selectUser;
+
+  bot.sendMessage(id, response, options);
+});
+
+bot.onText(/^\/demoteUser$/, async (msg, [source]) => {
+  const { id } = msg.chat;
+  const userID = msg.from.id;
+  const options = {
+    parse_mode: "HTML",
+    disable_notification: true,
+    reply_markup: {
+      hide_keyboard: true,
+    },
+  };
+  let response;
+
+  // check if the user is a member of the class
+  const isUserinClass = await userController.checkUserinClass(userID);
+  if (!isUserinClass) {
+    response = getResponse(source, {}).classErr;
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  // check if the user is an admin
+  const isUserAdmin = await userController.checkUserAdmin(userID);
+  if (!isUserAdmin) {
+    response = getResponse(source, {}).permissionErr;
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  // saving '/demoteUser' command to the db to know users request in the future
+  await requestController.updateRequest(userID, source);
+
+  options.reply_markup.inline_keyboard =
+    await userController.createAdminButtons(userID);
+  response = getResponse(source).selectUser;
 
   bot.sendMessage(id, response, options);
 });
@@ -473,43 +515,6 @@ bot.onText(/^Delete сlass$/, async (msg) => {
   bot.sendMessage(id, response, options);
 });
 
-bot.onText(/^\d{9,9}$/, async (msg) => {
-  const { id } = msg.chat;
-  const userID = msg.from.id;
-  const secUserID = msg.text;
-  const options = {
-    parse_mode: "HTML",
-    disable_notification: true,
-    reply_markup: {
-      hide_keyboard: true,
-    },
-  };
-
-  // check if the user made a request
-  const request = await requestController.getRequest(userID);
-  if (request.includes("/promoteUser")) {
-    const source = "/promoteUser";
-
-    // adding user to the class object
-    const isUsersInTheSameClass = await userController.promoteUser(
-      userID,
-      secUserID
-    );
-
-    if (!isUsersInTheSameClass) {
-      response = getResponse(source, {}).userClassErr;
-
-      return bot.sendMessage(id, response, options);
-    }
-
-    await requestController.clearRequest(userID);
-
-    response = getResponse(source, {}).success;
-
-    return bot.sendMessage(id, response, options);
-  }
-});
-
 bot.onText(
   /^Monday$|^Tuesday$|^Wednesday$|^Thursday$|^Friday$/,
   async (msg, [weekday]) => {
@@ -526,7 +531,6 @@ bot.onText(
 
     // check if the user made a request
     const request = await requestController.getRequest(userID);
-
     if (!request) return;
     if (
       !request.some((item) =>
@@ -848,11 +852,12 @@ bot.on("callback_query", async (data) => {
       hide_keyboard: true,
     },
   };
+  let response;
 
   if (data.data === "Back") {
     await requestController.clearRequest(userID);
 
-    const response = getResponse(data.data, { userName });
+    response = getResponse(data.data, { userName });
 
     bot.answerCallbackQuery(callback_query_id);
 
@@ -861,5 +866,39 @@ bot.on("callback_query", async (data) => {
       response[Math.floor(Math.random() * response.length)],
       options
     );
+  }
+  if (/^\d{9,9}$/.test(data.data)) {
+    let source;
+
+    // check if the user made a request
+    const request = await requestController.getRequest(userID);
+    if (!request) return bot.answerCallbackQuery(callback_query_id);
+    if (request.includes("/promoteUser")) {
+      source = "/promoteUser";
+
+      await userController.promoteUser(userID, parseInt(data.data));
+    }
+    if (request.includes("/demoteUser")) {
+      source = "/demoteUser";
+
+      const isClasshasSingleAdmin =
+        await classController.checkClasshasSingleAdmin(userID);
+      if (!isClasshasSingleAdmin) {
+        response = getResponse(source, {}).singleUserErr;
+
+        bot.answerCallbackQuery(callback_query_id);
+        return bot.sendMessage(id, response, options);
+      }
+
+      await userController.demoteUser(userID, parseInt(data.data));
+    }
+
+    await requestController.clearRequest(userID);
+
+    bot.answerCallbackQuery(callback_query_id);
+
+    response = getResponse(source).success;
+
+    bot.sendMessage(id, response, options);
   }
 });

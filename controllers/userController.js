@@ -47,6 +47,59 @@ exports.promoteUser = async (userID, promoteUserID) => {
   }
 };
 
+// returns class document if user successfully promoted. If not returns false
+exports.demoteUser = async (userID, demoteUserID) => {
+  try {
+    const classDoc = await Class.findOne({
+      "users.userID": {
+        $all: [userID, demoteUserID],
+      },
+    });
+    if (!classDoc) return false;
+
+    // setting isAdmin of the user object to false
+    classDoc.users.forEach((el) => {
+      if (el.userID == demoteUserID) return (el.isAdmin = false);
+    });
+
+    await classDoc.save();
+
+    return classDoc;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+exports.createUserButtons = async (userID) => {
+  const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+  if (!classDoc) return false;
+  let response = [];
+
+  classDoc.users.forEach((el) => {
+    if (!el.isAdmin)
+      response.push([{ text: `@${el.username}`, callback_data: el.userID }]);
+  });
+
+  response.push([{ text: "Back", callback_data: "Back" }]);
+
+  return response;
+};
+
+exports.createAdminButtons = async (userID) => {
+  const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+  if (!classDoc) return false;
+  let response = [];
+
+  classDoc.users.forEach((el) => {
+    if (el.isAdmin)
+      response.push([{ text: `@${el.username}`, callback_data: el.userID }]);
+  });
+
+  response.push([{ text: "Back", callback_data: "Back" }]);
+
+  return response;
+};
+
 // returns true if findes class document with userID
 exports.checkUserinClass = async (userID) => {
   try {
@@ -67,11 +120,9 @@ exports.checkUserAdmin = async (userID) => {
 
     classDoc.users.forEach((el) => {
       if (el.userID === userID && el.isAdmin === true) return (isAdmin = true);
-      // if (el.userID === userID && el.isAdmin === true) return true;
     });
 
     return isAdmin;
-    // return false;
   } catch (err) {
     console.error(err);
   }

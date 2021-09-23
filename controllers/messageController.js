@@ -38,7 +38,7 @@ module.exports = (source, options) => {
     case "/leaveClass":
       response = {
         success: `You successfully left the Class!\n\nName: ${options.className}`,
-        userClassErr: `<b>ERROR: you can't leave a class where you are the only administrator or the only member. /deleteClass first</b>`,
+        singleUserErr: `<b>ERROR: you can't leave a class where you are the only administrator or the only member. /deleteClass first</b>`,
         classErr: "<b>ERROR: you are not in any class </b>",
       };
       break;
@@ -51,9 +51,9 @@ module.exports = (source, options) => {
             classDoc.users.length,
             classDoc._id,
           ];
-          let response = `Your class info:\n\nName: ${className}\nNumber of users: ${usersNum}\nInvite link: https://t.me/Test_homework_dev_bot?start=${classURL}`;
+          let response = `Your class info:\n\nName: ${className}\nNumber of members: ${usersNum}\nInvite link: https://t.me/Test_homework_dev_bot?start=${classURL}`;
           let admins = `\n\nAdmins:\n`;
-          let users = `\nUsers:\n`;
+          let users = `\nMembers:\n`;
 
           classDoc.users.forEach((user) => {
             if (user.isAdmin) {
@@ -73,8 +73,8 @@ module.exports = (source, options) => {
     case "/promoteUser":
       response = {
         success: "User has been promoted!",
-        sendMessage:
-          "Please send me ID of the user\nUser can get it with this command /getid\nIf you want to go back, click 'Back'\n\nExample:\n123456789",
+        selectUser:
+          "Please select user you want to promote\nIf you want to go back, click 'Back'",
         permissionErr:
           "<b>ERROR: you don't have permission to promote users</b>",
         classErr: "<b>ERROR: you are not in any class </b>",
@@ -82,7 +82,15 @@ module.exports = (source, options) => {
       };
       break;
     case "/demoteUser":
-      response = `<a href="tg://user?id=${options.userID}">@${options.username}</a>`;
+      response = {
+        success: "User has been demoted!",
+        selectUser:
+          "Please select user you want to demote\nIf you want to go back, click 'Back'",
+        permissionErr:
+          "<b>ERROR: you don't have permission to demote users</b>",
+        classErr: "<b>ERROR: you are not in any class </b>",
+        singleUserErr: `<b>ERROR: you can't demote a user if this is the only administrator. /promoteUser first</b>`,
+      };
       break;
     case "/addSubject":
       response = {
