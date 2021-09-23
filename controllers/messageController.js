@@ -5,14 +5,14 @@ module.exports = (source, options) => {
   switch (source) {
     case "/start":
       response = {
-        start: `Hi, ${options.userName}\n/help for more info`,
-        success: `Hi, ${options.userName}. You entered the <b>${options.className}</b> class!`,
-        classErr: `You are already in the class`,
+        start: `Hi, ${options.userName}\n/help for more information`,
+        success: `Hi, ${options.userName}. You entered the <b>${options.className}</b> class!\n/help for more information`,
+        classErr: `Hi, ${options.userName}. You are already in the class\n/help for more information`,
       };
       break;
     case "/help":
       response =
-        "<b>User</b>\n/getid - shows your userID\n\n<b>Class</b>\n/create *className* - creates a class with specified name\n/leaveClass - leave the class you're in\n/classInfo - gives information about the class you're in\n<b>Admin Commands</b>\n/deleteClass - deletes class\n/invite - invites user to your class\n/promote - makes user an admin\n\n<b>Subjects</b>\n<b>AdminCommands</b>\n/addSubject - adds subject on specified day with specified name\n/removeSubject - removes from specified day with specified name\n\n<b>Homework</b>\n/show - shows homework(all, for the day, for the subject)\n<b>AdminCommands</b>\n/note - notes homework on specified day and subject\n/clear - clears homework(all, for the day, for the subject)";
+        "To add new member send a join link. You can get join link with /classInfo\nTo go back just type 'Back'\n\n<b>Class</b>\n/create *className* - creates a class with specified name\n/leaveClass - leave the class you're in\n/classInfo - gives information about the class you're in\n<b>Admin Commands</b>\n/deleteClass - deletes class\n/promoteUser - makes user an admin\n/demoteUser - removes administrator privileges\n\n<b>Subjects</b>\n<b>AdminCommands</b>\n/addSubject - adds subject on specified day with specified name\n/removeSubject - removes from specified day with specified name\n\n<b>Homework</b>\n/show - shows homework(all, for the day, for the subject)\n<b>AdminCommands</b>\n/note - notes homework on specified day and subject\n/clear - clears homework(all, for the day, for the subject)";
       break;
     case "/getid":
       response = `Your user ID: ${options.userID}\nGive it to the admin of the class so you'll be able to got into the class`;

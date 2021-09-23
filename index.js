@@ -35,7 +35,7 @@ bot.onText(/^\/start/, async (msg, [source]) => {
   const { id } = msg.chat;
   const userName = msg.from.first_name;
   const userID = msg.from.id;
-  const username = msg.from.username;
+  const username = msg.from.username || userName;
   const options = {
     parse_mode: "HTML",
     disable_notification: true,
@@ -48,13 +48,9 @@ bot.onText(/^\/start/, async (msg, [source]) => {
     return bot.sendMessage(id, response, options);
   }
 
-  const classDoc = await userController.addUsertoClass(
-    URL,
-    userID,
-    username ? username : userName
-  );
+  const classDoc = await userController.addUsertoClass(URL, userID, username);
   if (!classDoc) {
-    const response = getResponse(source, {}).classErr;
+    const response = getResponse(source, { userName }).classErr;
 
     return bot.sendMessage(id, response, options);
   }
@@ -79,8 +75,9 @@ bot.onText(/^\/help$/, (msg, [source]) => {
 
 bot.onText(/^\/create/, async (msg) => {
   const { id } = msg.chat;
+  const userName = msg.from.first_name;
   const userID = msg.from.id;
-  const username = msg.from.username;
+  const username = msg.from.username || userName;
   const options = {
     parse_mode: "HTML",
     disable_notification: true,
