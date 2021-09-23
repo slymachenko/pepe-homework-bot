@@ -128,7 +128,6 @@ module.exports = (source, options) => {
         permissionErr:
           "<b>ERROR: you don't have permission to add subjects</b>",
         classErr: "<b>ERROR: you are not in any class </b>",
-        msgErr: `<b>ERROR: there's no ${options.subjectName} on ${options.day}</b>`,
         subjectsErr: `<b>ERROR: ${options.day} has no subjects</b>\nPlease add subject first`,
       };
       break;
@@ -167,6 +166,18 @@ module.exports = (source, options) => {
         createSubjectHomeworkResponse(subjectDoc) {
           return `<b>${subjectDoc.subjectIndex}.${subjectDoc.subject}: </b>${subjectDoc.text}`;
         },
+      };
+      break;
+    case "/clear":
+      response = {
+        success: `homework for the ${options.subjectName} on ${options.day} has been cleared!`,
+        selectDay:
+          "Please select the day of the week which homework you want to clear",
+        selectSubject: `Please select the subject of the ${options.day} which homework you want to clear`,
+        permissionErr:
+          "<b>ERROR: you don't have permission to clear subjects</b>",
+        classErr: "<b>ERROR: you are not in any class </b>",
+        subjectsErr: `<b>ERROR: ${options.day} has no subjects</b>\nPlease add subject first`,
       };
       break;
     case "Back":

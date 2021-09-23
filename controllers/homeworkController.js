@@ -140,6 +140,27 @@ exports.addHomework = async (userID, day, subject, homework) => {
   }
 };
 
+exports.clearHomework = async (userID, day, subject) => {
+  try {
+    // retrieving class document with userID in
+    const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+    if (!classDoc) return false;
+    const homeworkDoc = await Homework.findOne({ classID: classDoc._id });
+    const dayDoc = homeworkDoc.days[day];
+
+    dayDoc.forEach((el) => {
+      if (el.subject === subject) {
+        el.text = "";
+      }
+    });
+
+    homeworkDoc.save();
+    return true;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 exports.getAllHomework = async (userID) => {
   try {
     // retrieving class document with userID in
