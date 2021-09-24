@@ -103,6 +103,7 @@ module.exports = (source, options) => {
           "<b>ERROR: you don't have permission to add subjects</b>",
         classErr: "<b>ERROR: you are not in any class </b>",
         msgErr: `<b>ERROR: there's a subject with the ${options.subjectIndex} index on ${options.day}\nRemove the subject with the ${options.subjectIndex} index and try again</b>`,
+        wrongSubjIndex: `<b>ERROR: subject index must be an integer or float number with one digit after in the range 0-12.9`,
       };
       break;
     case "/removesubject":
@@ -146,9 +147,9 @@ module.exports = (source, options) => {
           days.forEach((day) => {
             response += `\n<b>${day}:</b>\n`;
             homework[day].forEach((subject) => {
-              response += `<b>${subject.subjectIndex}.${subject.subject}:</b> ${
-                subject.text
-              } ${subject.photo.length ? "<b>[PHOTO]</b>" : ""}\n`;
+              response += `<b>${subject.subjectIndex}.${subject.subject}: ${
+                subject.photo.length ? "[PHOTO]" : ""
+              }</b>\n${subject.text ? `${subject.text}\n` : ""}`;
             });
           });
 
@@ -161,9 +162,9 @@ module.exports = (source, options) => {
           subjects.forEach((subject) => {
             response += `<b>${homework[subject].subjectIndex}.${
               homework[subject].subject
-            }:</b> ${homework[subject].text} ${
-              homework[subject].photo.length ? "<b>[PHOTO]</b>" : ""
-            }\n`;
+            }: ${homework[subject].photo.length ? "[PHOTO]" : ""}</b>\n${
+              homework[subject].text ? `${homework[subject].text}\n` : ""
+            }`;
           });
 
           return response;

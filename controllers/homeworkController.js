@@ -21,7 +21,6 @@ exports.createSubject = async (userID, subject) => {
     const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
     if (!classDoc) return false;
     const homeworkDoc = await Homework.findOne({ classID: classDoc._id });
-
     let isIndexUnique = true;
 
     homeworkDoc.days[subject.day].forEach((el) => {
@@ -83,12 +82,12 @@ exports.getSubjectsButtons = async (userID, day) => {
 
     dayDoc.forEach((el, i) => {
       //   if ([0, 4, 6, 9].includes(i)) subjectsArr.push([]);
-      if (i <= 2) subjectsArr[0].push(`${el.subjectIndex}.${el.subject}`);
+      if (i <= 2) subjectsArr[0].push(`${el.subjectIndex} ${el.subject}`);
       if (i > 2 && i <= 5)
-        subjectsArr[1].push(`${el.subjectIndex}.${el.subject}`);
+        subjectsArr[1].push(`${el.subjectIndex} ${el.subject}`);
       if (i > 5 && i <= 8)
-        subjectsArr[2].push(`${el.subjectIndex}.${el.subject}`);
-      if (i > 8) subjectsArr[3].push(`${el.subjectIndex}.${el.subject}`);
+        subjectsArr[2].push(`${el.subjectIndex} ${el.subject}`);
+      if (i > 8) subjectsArr[3].push(`${el.subjectIndex} ${el.subject}`);
     });
 
     subjectsArr.push(["Back"]);

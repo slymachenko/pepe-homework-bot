@@ -620,6 +620,7 @@ bot.onText(
 
       options.reply_markup = {
         keyboard: await homeworkController.getSubjectsButtons(userID, weekday),
+        one_time_keyboard: true,
       };
 
       options.reply_markup.keyboard.splice(
@@ -660,119 +661,128 @@ bot.onText(
   }
 );
 
-bot.onText(/^[1-9].[A-Za-zА-яа-я]|^10.[A-Za-zА-яа-я]/, async (msg) => {
-  const { id } = msg.chat;
-  const userID = msg.from.id;
-  const options = {
-    parse_mode: "HTML",
-    disable_notification: true,
-    reply_markup: {
-      hide_keyboard: true,
-    },
-  };
-  let response;
+bot.onText(
+  /^[0-9]*\.[0-9]+\s[a-zA-Zа-яА-я]+|^[0-9]+\s[a-zA-Zа-яА-я]+/,
+  async (msg) => {
+    const { id } = msg.chat;
+    const userID = msg.from.id;
+    const options = {
+      parse_mode: "HTML",
+      disable_notification: true,
+      reply_markup: {
+        hide_keyboard: true,
+      },
+    };
+    let response;
 
-  // check if the user made a request
-  const request = await requestController.getRequest(userID);
-  if (!request || request.length !== 2) return;
+    // check if the user made a request
+    const request = await requestController.getRequest(userID);
+    if (!request || request.length !== 2) return;
 
-  const day = request[1];
-  const [subjectIndex, ...text] = msg.text.split(".");
-  const subjectName = text.join(" ");
+    const day = request[1];
+    const [num, ...text] = msg.text.split(" ");
+    const subjectIndex = parseFloat(parseFloat(num).toFixed(1));
+    const subjectName = text.join(" ");
 
-  if (request.includes("/addsubject")) {
-    const source = "/addsubject";
+    if (subjectIndex > 12.9) {
+      response = getResponse("/addsubject").wrongSubjIndex;
 
-    const homeworkDoc = await homeworkController.createSubject(userID, {
-      index: subjectIndex,
-      name: subjectName,
-      day,
-    });
+      return bot.sendMessage(id, respose, options);
+    }
 
-    if (!homeworkDoc) {
+    if (request.includes("/addsubject")) {
+      const source = "/addsubject";
+
+      const homeworkDoc = await homeworkController.createSubject(userID, {
+        index: subjectIndex,
+        name: subjectName,
+        day,
+      });
+
+      if (!homeworkDoc) {
+        response = getResponse(source, {
+          subjectIndex,
+          subjectName,
+          day,
+        }).msgErr;
+
+        await requestController.clearRequest(userID);
+
+        return bot.sendMessage(id, response, options);
+      }
+
       response = getResponse(source, {
         subjectIndex,
         subjectName,
         day,
-      }).msgErr;
-
-      await requestController.clearRequest(userID);
+      }).success;
 
       return bot.sendMessage(id, response, options);
     }
+    if (request.includes("/removesubject")) {
+      const source = "/removesubject";
 
-    response = getResponse(source, {
-      subjectIndex,
-      subjectName,
-      day,
-    }).success;
+      const homeworkDoc = await homeworkController.deleteSubject(userID, {
+        name: subjectName,
+        index: subjectIndex,
+        day,
+      });
 
-    return bot.sendMessage(id, response, options);
-  }
-  if (request.includes("/removesubject")) {
-    const source = "/removesubject";
+      if (!homeworkDoc) {
+        response = getResponse(source, {
+          subjectIndex,
+          subjectName,
+        }).msgErr;
 
-    const homeworkDoc = await homeworkController.deleteSubject(userID, {
-      name: subjectName,
-      index: subjectIndex,
-      day,
-    });
+        await requestController.clearRequest(userID);
 
-    if (!homeworkDoc) {
+        return bot.sendMessage(id, response, options);
+      }
+
+      await requestController.clearRequest(userID);
+
       response = getResponse(source, {
         subjectIndex,
         subjectName,
-      }).msgErr;
-
-      await requestController.clearRequest(userID);
+        day,
+      }).success;
 
       return bot.sendMessage(id, response, options);
     }
+    if (request.includes("/show") && request.length === 2) {
+      const source = "/show";
 
-    await requestController.clearRequest(userID);
-
-    response = getResponse(source, {
-      subjectIndex,
-      subjectName,
-      day,
-    }).success;
-
-    return bot.sendMessage(id, response, options);
-  }
-  if (request.includes("/show") && request.length === 2) {
-    const source = "/show";
-    const [subjectIndex, subject] = msg.text.split(".");
-
-    const subjectDoc = await homeworkController.getSubjectHomework(
-      userID,
-      day,
-      subjectIndex,
-      subject
-    );
-
-    response = getResponse(source, {}).createSubjectHomeworkResponse(
-      subjectDoc
-    );
-
-    await requestController.clearRequest(userID);
-
-    if (subjectDoc.photo.length > 1) {
-      const media = homeworkController.getMediaPhotoGroup(
-        subjectDoc.photo,
-        response
+      const subjectDoc = await homeworkController.getSubjectHomework(
+        userID,
+        day,
+        subjectIndex,
+        subjectName
       );
 
-      return bot.sendMediaGroup(id, media, options);
-    }
-    if (subjectDoc.photo.length === 1) {
-      options.caption = response;
+      response = getResponse(source, {}).createSubjectHomeworkResponse(
+        subjectDoc
+      );
 
-      return bot.sendPhoto(id, subjectDoc.photo[0], options);
-    }
+      await requestController.clearRequest(userID);
 
-    bot.sendMessage(id, response, options);
+      if (subjectDoc.photo.length > 1) {
+        const media = homeworkController.getMediaPhotoGroup(
+          subjectDoc.photo,
+          response
+        );
+
+        return bot.sendMediaGroup(id, media, options);
+      }
+      if (subjectDoc.photo.length === 1) {
+        options.caption = response;
+
+        return bot.sendPhoto(id, subjectDoc.photo[0], options);
+      }
+
+      bot.sendMessage(id, response, options);
+    }
   }
-});
+);
 
 bot.onText(/^All/, async (msg) => {
   const { id } = msg.chat;
@@ -860,7 +870,8 @@ bot.on("text", async (msg) => {
 
     if (request.length === 2) {
       // user message => SUBJECT
-      const subjectName = msg.text.split(".")[1];
+      const [, ...text] = msg.text.split(" ");
+      const subjectName = text.join(" ");
 
       const isSubjectinDay = await homeworkController.checkSubjectinDay(
         userID,
@@ -868,6 +879,9 @@ bot.on("text", async (msg) => {
         subjectName
       );
       if (!isSubjectinDay) {
+        options.reply_markup = {
+          one_time_keyboard: true,
+        };
         response = getResponse(source, {
           subjectName,
           day,
@@ -905,7 +919,8 @@ bot.on("text", async (msg) => {
     source = "/clear";
     // user message => SUBJECT
 
-    const subjectName = msg.text.split(".")[1];
+    const [, ...text] = msg.text.split(" ");
+    const subjectName = text.join(" ");
 
     const isSubjectinDay = await homeworkController.checkSubjectinDay(
       userID,
@@ -913,6 +928,9 @@ bot.on("text", async (msg) => {
       subjectName
     );
     if (!isSubjectinDay) {
+      options.reply_markup = {
+        one_time_keyboard: true,
+      };
       response = getResponse(source, {
         subjectName,
         day,
