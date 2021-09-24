@@ -26,7 +26,7 @@ module.exports = (source, options) => {
           "<b>ERROR: you are already in the class</b>\n\nTo create a new class you shouldn't be in any class",
       };
       break;
-    case "/deleteClass":
+    case "/deleteclass":
       response = {
         success: `Class has been successfully deleted!\n\nName: ${options.className}`,
         confirm: `Are you sure you want to delete class? All subjects and homework will be deleted permanently`,
@@ -35,14 +35,14 @@ module.exports = (source, options) => {
         classErr: "<b>ERROR: you are not in any class </b>",
       };
       break;
-    case "/leaveClass":
+    case "/leaveclass":
       response = {
         success: `You successfully left the Class!\n\nName: ${options.className}`,
         singleUserErr: `<b>ERROR: you can't leave a class where you are the only administrator or the only member. /deleteClass first</b>`,
         classErr: "<b>ERROR: you are not in any class </b>",
       };
       break;
-    case "/classInfo":
+    case "/classinfo":
       response = {
         classErr: "<b>ERROR: you are not in any class </b>",
         createClassInfoResponse(classDoc) {
@@ -70,7 +70,7 @@ module.exports = (source, options) => {
         },
       };
       break;
-    case "/promoteUser":
+    case "/promoteuser":
       response = {
         success: "User has been promoted!",
         selectUser:
@@ -81,7 +81,7 @@ module.exports = (source, options) => {
         userClassErr: "<b>ERROR: user is not in the class </b>",
       };
       break;
-    case "/demoteUser":
+    case "/demoteuser":
       response = {
         success: "User has been demoted!",
         selectUser:
@@ -92,7 +92,7 @@ module.exports = (source, options) => {
         singleUserErr: `<b>ERROR: you can't demote a user if this is the only administrator. /promoteUser first</b>`,
       };
       break;
-    case "/addSubject":
+    case "/addsubject":
       response = {
         success: `${options.subjectName} has been added on ${options.day} as a ${options.subjectIndex} class!`,
         selectDay:
@@ -105,7 +105,7 @@ module.exports = (source, options) => {
         msgErr: `<b>ERROR: there's a subject with the ${options.subjectIndex} index on ${options.day}\nRemove the subject with the ${options.subjectIndex} index and try again</b>`,
       };
       break;
-    case "/removeSubject":
+    case "/removesubject":
       response = {
         success: `${options.subjectName} has been removed from ${options.day}\n${options.subjectName} was a ${options.subjectIndex} class!`,
         selectDay:

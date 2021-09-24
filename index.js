@@ -14,7 +14,6 @@ dotenv.config({ path: "./config.env" });
 mongoose.connect(process.env.MONGO_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  useFindAndModify: false,
 });
 
 const TOKEN = process.env.TOKEN;
