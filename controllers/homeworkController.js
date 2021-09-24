@@ -151,7 +151,7 @@ exports.clearHomework = async (userID, day, subject) => {
     dayDoc.forEach((el) => {
       if (el.subject === subject) {
         el.text = "";
-        el.photo.length = 0;
+        el.photo = [];
       }
     });
 
