@@ -51,7 +51,7 @@ module.exports = (source, options) => {
             classDoc.users.length,
             classDoc._id,
           ];
-          let response = `Your class info:\n\nName: ${className}\nNumber of members: ${usersNum}\nInvite link: https://t.me/Test_homework_dev_bot?start=${classURL}`;
+          let response = `Your class info:\n\nName: ${className}\nNumber of members: ${usersNum}\nInvite link: https://t.me/pepe_homework_bot?start=${classURL}`;
           let admins = `\n\nAdmins:\n`;
           let users = `\nMembers:\n`;
 
