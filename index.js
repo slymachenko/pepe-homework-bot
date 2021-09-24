@@ -119,7 +119,7 @@ bot.onText(/^\/create/, async (msg) => {
   await bot.sendMessage(id, response, options);
 });
 
-bot.onText(/^\/deleteClass$/, async (msg, [source]) => {
+bot.onText(/^\/deleteclass$/, async (msg, [source]) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
   const options = {
@@ -159,7 +159,7 @@ bot.onText(/^\/deleteClass$/, async (msg, [source]) => {
   bot.sendMessage(id, response, options);
 });
 
-bot.onText(/^\/leaveClass$/, async (msg, [source]) => {
+bot.onText(/^\/leaveclass$/, async (msg, [source]) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
   const options = {
@@ -188,7 +188,7 @@ bot.onText(/^\/leaveClass$/, async (msg, [source]) => {
   bot.sendMessage(id, response, options);
 });
 
-bot.onText(/^\/classInfo$/, async (msg, [source]) => {
+bot.onText(/^\/classinfo$/, async (msg, [source]) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
   const options = {
@@ -211,7 +211,7 @@ bot.onText(/^\/classInfo$/, async (msg, [source]) => {
   bot.sendMessage(id, response, options);
 });
 
-bot.onText(/^\/promoteUser$/, async (msg, [source]) => {
+bot.onText(/^\/promoteuser$/, async (msg, [source]) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
   const options = {
@@ -250,7 +250,7 @@ bot.onText(/^\/promoteUser$/, async (msg, [source]) => {
   bot.sendMessage(id, response, options);
 });
 
-bot.onText(/^\/demoteUser$/, async (msg, [source]) => {
+bot.onText(/^\/demoteuser$/, async (msg, [source]) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
   const options = {
@@ -288,7 +288,7 @@ bot.onText(/^\/demoteUser$/, async (msg, [source]) => {
   bot.sendMessage(id, response, options);
 });
 
-bot.onText(/^\/addSubject$/, async (msg, [source]) => {
+bot.onText(/^\/addsubject$/, async (msg, [source]) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
   const options = {
@@ -332,7 +332,7 @@ bot.onText(/^\/addSubject$/, async (msg, [source]) => {
   bot.sendMessage(id, response, options);
 });
 
-bot.onText(/^\/removeSubject$/, async (msg, [source]) => {
+bot.onText(/^\/removesubject$/, async (msg, [source]) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
   const options = {

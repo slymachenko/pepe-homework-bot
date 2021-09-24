@@ -12,7 +12,7 @@ module.exports = (source, options) => {
       break;
     case "/help":
       response =
-        "To add new member send a join link. You can get join link with /classInfo\nTo go back just type 'Back'\n\n<b>Class</b>\n/create *className* - creates a class with specified name\n/leaveClass - leave the class you're in\n/classInfo - gives information about the class you're in\n<b>Admin Commands</b>\n/deleteClass - deletes class\n/promoteUser - makes user an admin\n/demoteUser - removes administrator privileges\n\n<b>Subjects</b>\n<b>AdminCommands</b>\n/addSubject - adds subject on specified day with specified name\n/removeSubject - removes from specified day with specified name\n\n<b>Homework</b>\n/show - shows homework(all, for the day, for the subject)\n<b>AdminCommands</b>\n/note - notes homework on specified day and subject\n/clear - clears homework(all, for the day, for the subject)";
+        "To add new member send a join link. You can get join link with /classinfo\nTo go back just type 'Back'\n\n<b>Class</b>\n/create *className* - creates a class with specified name\n/leaveclass - leave the class you're in\n/classinfo - gives information about the class you're in\n<b>Admin Commands</b>\n/deleteclass - deletes class\n/promoteuser - makes user an admin\n/demoteuser - removes administrator privileges\n\n<b>Subjects</b>\n<b>AdminCommands</b>\n/addsubject - adds subject on specified day with specified name\n/removesubject - removes from specified day with specified name\n\n<b>Homework</b>\n/show - shows homework(all, for the day, for the subject)\n<b>AdminCommands</b>\n/note - notes homework(text or/and photos) on specified day and subject\n/clear - clears homework(all, for the day, for the subject)";
       break;
     case "/getid":
       response = `Your user ID: ${options.userID}\nGive it to the admin of the class so you'll be able to got into the class`;
@@ -124,7 +124,7 @@ module.exports = (source, options) => {
         selectDay:
           "Please select the day of the week to which you want to note homework",
         selectSubject: `Please select the subject of the ${options.day} to which you want to note homework`,
-        sendMessage: `Please send me homework for the ${options.subjectName} on ${options.day}\nIf you want to go back, click 'Back'`,
+        sendMessage: `Please send me homework for the ${options.subjectName} on ${options.day}\nYou can send me photo or/and text\nIf you want to go back, click 'Back'`,
         permissionErr:
           "<b>ERROR: you don't have permission to add subjects</b>",
         classErr: "<b>ERROR: you are not in any class </b>",

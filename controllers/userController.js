@@ -116,6 +116,7 @@ exports.checkUserinClass = async (userID) => {
 exports.checkUserAdmin = async (userID) => {
   try {
     const classDoc = await Class.findOne({ users: { $elemMatch: { userID } } });
+    if (!classDoc) return false;
     let isAdmin = false;
 
     classDoc.users.forEach((el) => {
