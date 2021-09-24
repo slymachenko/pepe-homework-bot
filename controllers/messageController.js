@@ -141,7 +141,6 @@ module.exports = (source, options) => {
         subjectsErr: `<b>ERROR: ${options.day} has no subjects</b>\nPlease add subject first`,
         createAllHomeworkResponse(homework) {
           const days = Object.keys(homework);
-          days.shift();
           let response = `<b>Homework:</b>\n`;
 
           days.forEach((day) => {
