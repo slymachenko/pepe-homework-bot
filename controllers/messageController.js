@@ -38,7 +38,7 @@ module.exports = (source, options) => {
     case "/leaveclass":
       response = {
         success: `You successfully left the Class!\n\nName: ${options.className}`,
-        singleUserErr: `<b>ERROR: you can't leave a class where you are the only administrator or the only member. /deleteClass first</b>`,
+        singleUserErr: `<b>ERROR: you can't leave a class where you are the only administrator or the only member. /deleteclass first</b>`,
         classErr: "<b>ERROR: you are not in any class </b>",
       };
       break;
@@ -89,7 +89,7 @@ module.exports = (source, options) => {
         permissionErr:
           "<b>ERROR: you don't have permission to demote users</b>",
         classErr: "<b>ERROR: you are not in any class </b>",
-        singleUserErr: `<b>ERROR: you can't demote a user if this is the only administrator. /promoteUser first</b>`,
+        singleUserErr: `<b>ERROR: you can't demote a user if this is the only administrator. /promoteuser first</b>`,
       };
       break;
     case "/addsubject":

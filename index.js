@@ -146,7 +146,7 @@ bot.onText(/^\/deleteclass$/, async (msg, [source]) => {
     return bot.sendMessage(id, response, options);
   }
 
-  // saving '/deleteClass' command to the db to know users request in the future
+  // saving '/deleteclass' command to the db to know users request in the future
   await requestController.updateRequest(userID, source);
 
   options.reply_markup = {
@@ -238,7 +238,7 @@ bot.onText(/^\/promoteuser$/, async (msg, [source]) => {
     return bot.sendMessage(id, response, options);
   }
 
-  // saving '/promoteUser' command to the db to know users request in the future
+  // saving '/promoteuser' command to the db to know users request in the future
   await requestController.updateRequest(userID, source);
 
   options.reply_markup = {
@@ -277,7 +277,7 @@ bot.onText(/^\/demoteuser$/, async (msg, [source]) => {
     return bot.sendMessage(id, response, options);
   }
 
-  // saving '/demoteUser' command to the db to know users request in the future
+  // saving '/demoteuser' command to the db to know users request in the future
   await requestController.updateRequest(userID, source);
 
   options.reply_markup.inline_keyboard =
@@ -315,7 +315,7 @@ bot.onText(/^\/addsubject$/, async (msg, [source]) => {
     return bot.sendMessage(id, response, options);
   }
 
-  // saving '/addSubject' command to the db to know users request in the future
+  // saving '/addsubject' command to the db to know users request in the future
   await requestController.updateRequest(userID, source);
 
   options.reply_markup = {
@@ -359,7 +359,7 @@ bot.onText(/^\/removesubject$/, async (msg, [source]) => {
     return bot.sendMessage(id, response, options);
   }
 
-  // saving '/removeSubject' command to the db to know users request in the future
+  // saving '/removesubject' command to the db to know users request in the future
   await requestController.updateRequest(userID, source);
 
   options.reply_markup = {
@@ -522,7 +522,7 @@ bot.onText(/^Back$|^back$/, async (msg) => {
 bot.onText(/^Delete сlass$/, async (msg) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
-  const source = "/deleteClass";
+  const source = "/deleteclass";
   const options = {
     parse_mode: "HTML",
     disable_notification: true,
@@ -533,7 +533,7 @@ bot.onText(/^Delete сlass$/, async (msg) => {
 
   // check if the user made a request
   const request = await requestController.getRequest(userID);
-  if (!request.includes("/deleteClass")) return;
+  if (!request.includes("/deleteclass")) return;
 
   // deleting class document and clearing user request
   const classDoc = await classController.deleteClass(userID);
@@ -565,20 +565,20 @@ bot.onText(
     if (!request) return;
     if (
       !request.some((item) =>
-        ["/addSubject", "/removeSubject", "/note", "/show", "/clear"].includes(
+        ["/addsubject", "/removesubject", "/note", "/show", "/clear"].includes(
           item
         )
       )
     )
       return;
-    if (request.includes("/addSubject")) {
-      source = "/addSubject";
+    if (request.includes("/addsubject")) {
+      source = "/addsubject";
       options.reply_markup = {
         inline_keyboard: [[{ text: "Back", callback_data: "Back" }]],
       };
     }
-    if (request.includes("/removeSubject")) {
-      source = "/removeSubject";
+    if (request.includes("/removesubject")) {
+      source = "/removesubject";
       options.reply_markup = {
         keyboard: await homeworkController.getSubjectsButtons(userID, weekday),
       };
@@ -680,8 +680,8 @@ bot.onText(/^[1-9].[A-Za-zА-яа-я]|^10.[A-Za-zА-яа-я]/, async (msg) => {
   const [subjectIndex, ...text] = msg.text.split(".");
   const subjectName = text.join(" ");
 
-  if (request.includes("/addSubject")) {
-    const source = "/addSubject";
+  if (request.includes("/addsubject")) {
+    const source = "/addsubject";
 
     const homeworkDoc = await homeworkController.createSubject(userID, {
       index: subjectIndex,
@@ -709,8 +709,8 @@ bot.onText(/^[1-9].[A-Za-zА-яа-я]|^10.[A-Za-zА-яа-я]/, async (msg) => {
 
     return bot.sendMessage(id, response, options);
   }
-  if (request.includes("/removeSubject")) {
-    const source = "/removeSubject";
+  if (request.includes("/removesubject")) {
+    const source = "/removesubject";
 
     const homeworkDoc = await homeworkController.deleteSubject(userID, {
       name: subjectName,
@@ -997,13 +997,13 @@ bot.on("callback_query", async (data) => {
     // check if the user made a request
     const request = await requestController.getRequest(userID);
     if (!request) return bot.answerCallbackQuery(callback_query_id);
-    if (request.includes("/promoteUser")) {
-      source = "/promoteUser";
+    if (request.includes("/promoteuser")) {
+      source = "/promoteuser";
 
       await userController.promoteUser(userID, parseInt(data.data));
     }
-    if (request.includes("/demoteUser")) {
-      source = "/demoteUser";
+    if (request.includes("/demoteuser")) {
+      source = "/demoteuser";
 
       const isClasshasSingleAdmin =
         await classController.checkClasshasSingleAdmin(userID);
