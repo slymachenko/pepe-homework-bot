@@ -953,7 +953,7 @@ bot.on("text", async (msg) => {
 bot.on("photo", async (msg) => {
   const { id } = msg.chat;
   const userID = msg.from.id;
-  const photo_id = msg.photo[3].file_id;
+  const photo_id = msg.photo[0].file_id;
   const homeworkText = msg.caption;
   const source = "/note";
   const options = {
@@ -963,8 +963,6 @@ bot.on("photo", async (msg) => {
       inline_keyboard: [[{ text: "Back", callback_data: "Back" }]],
     },
   };
-
-  console.log(msg);
 
   // check if the user made a request
   const request = await requestController.getRequest(userID);
