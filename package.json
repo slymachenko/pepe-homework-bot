@@ -10,8 +10,8 @@
   "author": "Arseniy Bryndin",
   "license": "ISC",
   "dependencies": {
-    "dotenv": "^8.2.0",
-    "mongoose": "^5.11.8",
+    "dotenv": "^10.0.0",
+    "mongoose": "^6.0.7",
     "node-telegram-bot-api": "^0.50.0"
   },
   "engines": {
