@@ -70,14 +70,14 @@ exports.checkClasshasSingleAdmin = async (userID) => {
     let adminsCount = 0;
 
     // checking if class has only one member
-    if (classDoc.users.length === 1) return false;
+    if (classDoc.users.length === 1) return true;
 
     classDoc.users.forEach((el) => {
       if (el.isAdmin) adminsCount++;
     });
 
-    if (adminsCount === 1) return false;
-    return true;
+    if (adminsCount === 1) return true;
+    return false;
   } catch (err) {
     console.error(err);
   }

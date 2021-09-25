@@ -40,22 +40,31 @@ bot.onText(/^\/start/, async (msg, [source]) => {
     disable_notification: true,
   };
   const URL = msg.text.substr(msg.text.indexOf(" ") + 1);
+  let response;
 
   if (URL === source) {
-    const response = getResponse(source, { userName }).start;
+    response = getResponse(source, { userName }).start;
+
+    return bot.sendMessage(id, response, options);
+  }
+
+  // check if the user is a member of the class - send an error message
+  const isUserinClass = await userController.checkUserinClass(userID);
+  if (isUserinClass) {
+    response = getResponse(source, { userName }).classErr;
 
     return bot.sendMessage(id, response, options);
   }
 
   const classDoc = await userController.addUsertoClass(URL, userID, username);
   if (!classDoc) {
-    const response = getResponse(source, { userName }).classErr;
+    response = getResponse(source, { userName }).classDeleteErr;
 
     return bot.sendMessage(id, response, options);
   }
 
   const className = classDoc.name;
-  const response = getResponse(source, { userName, className }).success;
+  response = getResponse(source, { userName, className }).success;
 
   bot.sendMessage(id, response, options);
 });
@@ -170,7 +179,8 @@ bot.onText(/^\/leaveclass$/, async (msg, [source]) => {
   const isClasshasSingleAdmin = await classController.checkClasshasSingleAdmin(
     userID
   );
-  if (!isClasshasSingleAdmin) {
+  const isUserAdmin = await userController.checkUserAdmin(userID);
+  if (isClasshasSingleAdmin && isUserAdmin) {
     response = getResponse(source, {}).singleUserErr;
 
     return bot.sendMessage(id, response, options);

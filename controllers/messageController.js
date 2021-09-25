@@ -7,7 +7,8 @@ module.exports = (source, options) => {
       response = {
         start: `Hi, ${options.userName}\n/help for more information`,
         success: `Hi, ${options.userName}. You entered the <b>${options.className}</b> class!\n/help for more information`,
-        classErr: `Hi, ${options.userName}. You are already in the class\n/help for more information`,
+        classErr: `Hi, ${options.userName}. You are already in the class. To enter the class by the invite link /leaveclass first\n/help for more information`,
+        classDeleteErr: `Hi, ${options.userName}. Class with that invite link has been deleted. You can't enter this class`,
       };
       break;
     case "/help":
@@ -38,7 +39,7 @@ module.exports = (source, options) => {
     case "/leaveclass":
       response = {
         success: `You successfully left the Class!\n\nName: ${options.className}`,
-        singleUserErr: `<b>ERROR: you can't leave a class where you are the only administrator or the only member. /deleteclass first</b>`,
+        singleUserErr: `<b>ERROR: you can't leave a class where you are the only administrator. /deleteclass first</b>`,
         classErr: "<b>ERROR: you are not in any class </b>",
       };
       break;
@@ -51,15 +52,15 @@ module.exports = (source, options) => {
             classDoc.users.length,
             classDoc._id,
           ];
-          let response = `Your class info:\n\nName: ${className}\nNumber of members: ${usersNum}\nInvite link: https://t.me/pepe_homework_bot?start=${classURL}`;
-          let admins = `\n\nAdmins:\n`;
+          let response = `Name: ${className}\nNumber of members: ${usersNum}\nInvite link: https://t.me/pepe_homework_bot?start=${classURL}\n`;
+          let admins = `\nAdmins:\n`;
           let users = `\nMembers:\n`;
 
           classDoc.users.forEach((user) => {
             if (user.isAdmin) {
-              admins += `<a href="tg://user?id=${user.userID}">@${user.username}</a>\n`;
+              admins += `<a href="tg://user?id=${user.userID}">${user.username}</a>\n`;
             } else {
-              users += `<a href="tg://user?id=${user.userID}">@${user.username}</a>\n`;
+              users += `<a href="tg://user?id=${user.userID}">${user.username}</a>\n`;
             }
           });
 

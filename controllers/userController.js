@@ -7,7 +7,7 @@ exports.addUsertoClass = async (URL, userID, username) => {
     if (!classDoc) return false;
 
     classDoc.users.forEach((el) => {
-      if (el.userID == userID) return false;
+      if (el.userID == userID) return classDoc;
     });
 
     classDoc.users.push({
