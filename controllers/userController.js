@@ -77,7 +77,7 @@ exports.createUserButtons = async (userID) => {
 
   classDoc.users.forEach((el) => {
     if (!el.isAdmin)
-      response.push([{ text: `@${el.username}`, callback_data: el.userID }]);
+      response.push([{ text: `${el.username}`, callback_data: el.userID }]);
   });
 
   response.push([{ text: "Back", callback_data: "Back" }]);
@@ -92,7 +92,7 @@ exports.createAdminButtons = async (userID) => {
 
   classDoc.users.forEach((el) => {
     if (el.isAdmin)
-      response.push([{ text: `@${el.username}`, callback_data: el.userID }]);
+      response.push([{ text: `${el.username}`, callback_data: el.userID }]);
   });
 
   response.push([{ text: "Back", callback_data: "Back" }]);
