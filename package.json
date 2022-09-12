@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^10.0.0",
-    "mongoose": "^6.0.7",
+    "mongoose": "^6.4.6",
     "node-telegram-bot-api": "^0.50.0"
   },
   "engines": {
