@@ -2,7 +2,7 @@
 
 [![Node version](https://img.shields.io/badge/Node-v12.9.0-green)](https://nodejs.org/en/)
 [![Node-telegram-bot-api](https://img.shields.io/badge/Node_Telegram_Bot_Api-v0.50.0-blue)](https://github.com/yagop/node-telegram-bot-api)
-[![Mongoose](https://img.shields.io/badge/Mongoose-v6.0.7-red)](https://mongoosejs.com/)
+[![Mongoose](https://img.shields.io/badge/Mongoose-v6.4.6-red)](https://mongoosejs.com/)
 [![Dot-env](https://img.shields.io/badge/DotEnv-v10.0.0-yellow)](https://github.com/motdotla/dotenv)
 
 Telegram bot for easy access to homework for week  
