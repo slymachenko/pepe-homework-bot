@@ -8,9 +8,28 @@
 Telegram bot for easy access to homework for week  
 **Created with** [node-telegram-bot-api](https://github.com/yagop/node-telegram-bot-api)
 
-# Usage
+# Setup
+- Clone git repository:  
+`git clone https://github.com/slymachenko/pepe-homework-bot.git`
+- Open project root directory.
+- Create `config.env` file that must contain:
+```
+TOKEN=*Telegram bot token*
+MONGO_URL=*MongoDB connection string*
+PORT=*PORT*
+URL=*Webhook URL*
+```
+- Download all dependencies:  
+`npm install`
+- Start ngrok:  
+`npx ngrok http *PORT*`
+- Start bot with  
+`npm start`  
+or  
+`npm run start-dev`
 
-- Find **@pepe_homework_bot** in telegram search
+# Usage
+- Find **@`your bot id`** in telegram search
 - Click **Start**
 
 # Command list
@@ -32,10 +51,3 @@ For class admins:
 `/removesubject` - remove subject from specified day  
 `/note` - note homework on specified subject  
 `/clear` - clear homework on specified subject  
-
-# Technologies used
-
-**Framework** - `Nodejs`  
- **API** - `node-telegram-bot-api`  
- **MongoDB Module** - `Mongoose`  
- **Module for env vars** - `dotenv`
